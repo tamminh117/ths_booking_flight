@@ -56,12 +56,12 @@ const CITIES = [
   { code: "CXR", name: "Nha Trang", airport: "Cam Ranh International" },
 ];
 const FLIGHTS = [
-  { code: "VU751", dep: "08:35", arr: "10:50", dur: "2h15m", base: 38, airline: "Vietravel Airlines", logoCode: "VU" },
-  { code: "VU775", dep: "09:55", arr: "12:10", dur: "2h15m", base: 50, airline: "Vietravel Airlines", logoCode: "VU" },
-  { code: "QH152", dep: "11:20", arr: "13:35", dur: "2h15m", base: 58, airline: "Bamboo Airways", logoCode: "QH" },
-  { code: "VN213", dep: "13:00", arr: "15:15", dur: "2h15m", base: 72, airline: "Vietnam Airlines", logoCode: "VN" },
-  { code: "VU803", dep: "14:20", arr: "16:35", dur: "2h15m", base: 45, airline: "Vietravel Airlines", logoCode: "VU" },
-  { code: "VJ128", dep: "16:40", arr: "18:55", dur: "2h15m", base: 42, airline: "VietJet Air", logoCode: "VJ" }
+  { code: "VU751", dep: "08:35", arr: "10:50", dur: "2h15m", base: 38, airline: "Viet Travel Airlines", logoCode: "VU" },
+  { code: "VU775", dep: "09:55", arr: "12:10", dur: "2h15m", base: 50, airline: "Viet Travel Airlines", logoCode: "VU" },
+  { code: "VU152", dep: "11:20", arr: "13:35", dur: "2h15m", base: 58, airline: "Viet Travel Airlines", logoCode: "VU" },
+  { code: "VU213", dep: "13:00", arr: "15:15", dur: "2h15m", base: 72, airline: "Viet Travel Airlines", logoCode: "VU" },
+  { code: "VU803", dep: "14:20", arr: "16:35", dur: "2h15m", base: 45, airline: "Viet Travel Airlines", logoCode: "VU" },
+  { code: "VU128", dep: "16:40", arr: "18:55", dur: "2h15m", base: 42, airline: "Viet Travel Airlines", logoCode: "VU" }
 ];
 const FARE_CLASSES = [
   { id: "economy",  label: "Phổ thông",  labelEn: "Economy",         mult: 1,    accent: "#64748b",
@@ -82,7 +82,7 @@ const ADD_ONS = [
 const NATIONALITIES = ["Việt Nam","Hoa Kỳ","Nhật Bản","Hàn Quốc","Trung Quốc","Pháp","Đức","Anh Quốc","Úc","Singapore","Thái Lan","Khác"];
 const COUNTRIES = ["Việt Nam","Hoa Kỳ","Nhật Bản","Hàn Quốc","Trung Quốc","Pháp","Đức","Anh Quốc","Úc","Singapore","Thái Lan","Khác"];
 const MONTHS_LABEL = ["Tháng 1","Tháng 2","Tháng 3","Tháng 4","Tháng 5","Tháng 6","Tháng 7","Tháng 8","Tháng 9","Tháng 10","Tháng 11","Tháng 12"];
-const FF_PROGRAMS = ["VieTravel Miles","Vietnam Airlines LOTUSMILES","Bamboo Airways","Khác"];
+const FF_PROGRAMS = ["Viet Travel Miles","Khác"];
 const COLS = ["A","B","C","D","E","F"];
 const TOTAL_ROWS = 20;
 const UNAVAILABLE = new Set(["1A","1C","2B","2F","3D","4A","4E","5B","5C","6F","7A","8B","8D","9C","10E","11A","11F","12B","13D","14C","15A","15E","16B","17D","18A","18C","19F","20B","20D"]);
@@ -612,7 +612,7 @@ function TopBar({ step, onBack }: { step: number; onBack?: () => void }) {
               <Plane size={15} className="text-accent rotate-45" />
             </div>
             <span className="text-primary font-bold text-base tracking-wide flex items-center gap-1.5">
-              Vietravel <span className="text-accent font-extrabold text-xs tracking-widest uppercase bg-accent/10 px-1.5 py-0.5 rounded">Airlines</span>
+              Viet Travel <span className="text-accent font-extrabold text-xs tracking-widest uppercase bg-accent/10 px-1.5 py-0.5 rounded">Airlines</span>
             </span>
           </div>
         </div>
@@ -663,15 +663,12 @@ function Homepage({ state, setState, onSearch }: { state: BookingState; setState
             <Plane size={18} className="text-accent rotate-45" />
           </div>
           <div>
-            <div className="text-primary font-black text-lg leading-none">Vietravel</div>
+            <div className="text-primary font-black text-lg leading-none">Viet Travel</div>
             <div className="text-accent text-[9px] font-extrabold tracking-widest">AIRLINES</div>
           </div>
         </div>
         <div className="hidden md:flex items-center gap-6 text-slate-600 text-sm font-semibold">
-          <button className="hover:text-primary transition-colors">Khách sạn</button>
           <button className="text-primary border-b-2 border-primary pb-1">Vé máy bay</button>
-          <button className="hover:text-primary transition-colors">Thuê xe</button>
-          <button className="hover:text-primary transition-colors">Combo du lịch</button>
           <button className="hover:text-primary transition-colors">Đổi lịch & Hoàn vé</button>
         </div>
         <div className="flex items-center gap-3">
@@ -686,34 +683,16 @@ function Homepage({ state, setState, onSearch }: { state: BookingState; setState
         <div className="absolute inset-0 bg-gradient-to-b from-[#003057]/68 via-[#003057]/48 to-slate-50" />
         <div className="relative z-10 text-center px-4 max-w-2xl">
           <h1 className="text-3xl md:text-5xl font-black text-white leading-tight mb-2">Thế giới rộng lớn, Bay dễ dàng</h1>
-          <p className="text-white/80 text-sm md:text-base">Mở lối hành trình cùng điểm chạm số hiện đại bậc nhất của Vietravel Airlines</p>
+          <p className="text-white/80 text-sm md:text-base">Mở lối hành trình cùng điểm chạm số hiện đại bậc nhất của Viet Travel Airlines</p>
         </div>
       </div>
 
       {/* Search Widget Container (Traveloka style) */}
       <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-20">
         <GlassCard className="p-6 overflow-visible">
-          {/* Main search tabs */}
-          <div className="flex items-center gap-6 border-b border-slate-200 pb-3 mb-5 overflow-x-auto scrollbar-none">
-            {[
-              { id: "hotels", label: "Khách sạn", icon: "🏢" },
-              { id: "flights", label: "Vé máy bay", icon: "✈️" },
-              { id: "cars", label: "Thuê xe", icon: "🚗" },
-              { id: "combos", label: "Combo Du lịch", icon: "🏨+✈️" }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveSearchTab(tab.id)}
-                className={cn(
-                  "flex items-center gap-2 pb-2 text-sm font-bold transition-all border-b-2 whitespace-nowrap",
-                  activeSearchTab === tab.id ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-slate-600"
-                )}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
+          <h2 className="text-slate-800 font-extrabold text-base mb-5 pb-3 border-b border-slate-100 flex items-center gap-2">
+            <span>✈️</span> Đặt vé máy bay trực tuyến
+          </h2>
 
           {/* Controls row */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -858,9 +837,9 @@ function Homepage({ state, setState, onSearch }: { state: BookingState; setState
 
       {/* Trusted Banner */}
       <div className="max-w-6xl mx-auto px-6 mt-8 flex flex-col items-center justify-center">
-        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2.5">Được tin tưởng bởi các hãng bay thành viên & đối tác</span>
+        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2.5">Được tin tưởng bởi các thành viên & đối tác</span>
         <div className="flex flex-wrap items-center justify-center gap-8 opacity-40 grayscale hover:opacity-72 transition-opacity">
-          {["Vietravel Airlines", "T&T Group", "SHB Bank", "Vietnam Airlines", "Bamboo Airways"].map(partner => (
+          {["Viet Travel Airlines", "T&T Group", "SHB Bank", "Vietravel Tourism"].map(partner => (
             <span key={partner} className="text-slate-800 font-bold text-xs tracking-wider">{partner}</span>
           ))}
         </div>
@@ -870,7 +849,7 @@ function Homepage({ state, setState, onSearch }: { state: BookingState; setState
       <div className="max-w-6xl mx-auto px-6 mt-12">
         <div className="flex items-center gap-2 mb-6">
           <MapPin size={18} className="text-accent" />
-          <h2 className="text-slate-800 font-extrabold text-xl">Khám phá Việt Nam cùng Vietravel Airlines</h2>
+          <h2 className="text-slate-800 font-extrabold text-xl">Khám phá Việt Nam cùng Viet Travel Airlines</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {DESTINATIONS.map((dest, di) => (
@@ -900,7 +879,7 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
   const [selFare, setSelFare] = useState(state.fareClass);
   const [sortBy, setSortBy] = useState<"price" | "duration">("price");
   const [directOnlyFilter, setDirectOnlyFilter] = useState(false);
-  const [selectedAirlines, setSelectedAirlines] = useState<string[]>(["VU", "QH", "VN", "VJ"]);
+  const [selectedAirlines, setSelectedAirlines] = useState<string[]>(["VU"]);
   const [selectedTimes, setSelectedTimes] = useState<string[]>(["early", "morning", "afternoon", "evening"]);
 
   // Expanded details inside flight cards
@@ -1060,7 +1039,7 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
                 <span>🎛️</span> Bộ lọc tìm kiếm
               </h3>
               <button 
-                onClick={() => { setDirectOnlyFilter(false); setSelectedAirlines(["VU", "QH", "VN", "VJ"]); setSelectedTimes(["early", "morning", "afternoon", "evening"]); }}
+                onClick={() => { setDirectOnlyFilter(false); setSelectedAirlines(["VU"]); setSelectedTimes(["early", "morning", "afternoon", "evening"]); }}
                 className="text-primary hover:text-blue-900 text-xs font-bold"
               >
                 Đặt lại
@@ -1079,29 +1058,6 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
                 />
                 <span>Bay thẳng (Direct)</span>
               </label>
-            </div>
-
-            {/* Airlines Filter */}
-            <div className="space-y-2 border-b border-slate-100 pb-4 mb-4">
-              <div className="text-slate-700 font-bold text-xs uppercase tracking-wider">Hãng hàng không</div>
-              <div className="space-y-2.5">
-                {[
-                  { code: "VU", name: "Vietravel Airlines" },
-                  { code: "VN", name: "Vietnam Airlines" },
-                  { code: "QH", name: "Bamboo Airways" },
-                  { code: "VJ", name: "VietJet Air" }
-                ].map(airline => (
-                  <label key={airline.code} className="flex items-center gap-3 text-xs text-slate-600 font-semibold cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedAirlines.includes(airline.code)}
-                      onChange={() => toggleAirlineFilter(airline.code)}
-                      className="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4"
-                    />
-                    <span>{airline.name}</span>
-                  </label>
-                ))}
-              </div>
             </div>
 
             {/* Times Filter */}
@@ -1192,11 +1148,8 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
                       <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-6">
                         {/* Airline logocode & name */}
                         <div className="w-40 shrink-0 flex items-center gap-3">
-                          <div className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center text-white font-extrabold text-[11px] shrink-0 shadow-sm",
-                            fl.logoCode === "VU" ? "bg-primary text-accent" : fl.logoCode === "VN" ? "bg-blue-900" : fl.logoCode === "QH" ? "bg-emerald-700" : "bg-red-500"
-                          )}>
-                            {fl.logoCode}
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-accent font-extrabold text-[11px] shrink-0 shadow-sm bg-primary">
+                            VU
                           </div>
                           <div>
                             <div className="font-extrabold text-slate-800 text-xs">{fl.airline}</div>
@@ -2633,7 +2586,7 @@ function ETicket({ state }: { state: BookingState }) {
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 75% 25%, white 0%, transparent 55%)" }} />
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-1.5"><Plane size={12} className="text-accent rotate-45" /><span className="text-white/80 text-[10px] font-extrabold tracking-widest">VIETRAVEL AIRLINES</span></div>
+                <div className="flex items-center gap-1.5"><Plane size={12} className="text-accent rotate-45" /><span className="text-white/80 text-[10px] font-extrabold tracking-widest">VIET TRAVEL AIRLINES</span></div>
                 <span className="bg-white/15 rounded-full px-3 py-1 text-white text-xs font-mono font-bold">{state.flightCode}</span>
               </div>
               <div className="flex items-center justify-between mt-5">
