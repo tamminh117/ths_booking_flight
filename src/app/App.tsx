@@ -1583,7 +1583,7 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
                         </div>
 
                         {/* Perks */}
-                        <div className="p-5 flex-1 space-y-3.5 text-xs text-slate-655 dark:text-slate-300">
+                        <div className="p-5 flex-1 space-y-3.5 text-xs text-slate-600 dark:text-slate-300">
                           <div className="flex items-start gap-2">
                             <span className="text-emerald-600 font-bold">✓</span>
                             <span>Bao gồm <b>{fc.baggage.cabin}</b> hành lý xách tay</span>
@@ -3197,8 +3197,8 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
               <div className="text-xs font-bold space-y-1">
                 <div>Chặng bay: <span className="text-[#004b87] dark:text-accent">TP. Hồ Chí Minh (SGN) → Phú Quốc (PQC)</span></div>
                 <div>Hành khách: <span className="uppercase">{lastName ? `${lastName} NGUYEN` : "NGUYỄN VĂN MINH"}</span></div>
-                <div>Ngày bay xuất phát: <span className="text-slate-655 dark:text-slate-300">14 tháng 7, 2026 (08:35)</span></div>
-                <div>Hãng vận chuyển: <span className="text-slate-655 dark:text-slate-300">Vietravel Airlines (VU751)</span></div>
+                <div>Ngày bay xuất phát: <span className="text-slate-600 dark:text-slate-300">14 tháng 7, 2026 (08:35)</span></div>
+                <div>Hãng vận chuyển: <span className="text-slate-600 dark:text-slate-300">Vietravel Airlines (VU751)</span></div>
               </div>
             </div>
 
@@ -3206,7 +3206,7 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
               <button 
                 type="button"
                 onClick={() => setStep("refundForm")}
-                className="bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-655 border border-red-200 dark:border-red-500/25 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                className="bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 border border-red-200 dark:border-red-500/25 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer"
               >
                 Yêu cầu hoàn vé
               </button>
@@ -3438,7 +3438,7 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
                       "p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer",
                       reschedulePaymentMethod === pm.id
                         ? "bg-[#004b87] text-white border-[#004b87] dark:bg-accent dark:text-primary dark:border-accent"
-                        : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-900 text-slate-655 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-900 text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800"
                     )}
                   >
                     {pm.name}
@@ -3547,10 +3547,10 @@ function LookupTicketModal({ open, onClose }: { open: boolean; onClose: () => vo
                     <span className="text-[10px] bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded font-bold">Đã xác nhận</span>
                   </div>
                   <div className="text-xs space-y-1 font-bold">
-                    <div>Hành trình: <span className="text-slate-655 dark:text-slate-200">{ticket.route}</span></div>
-                    <div>Chuyến bay: <span className="text-slate-655 dark:text-slate-200">{ticket.flight} (Ghế {ticket.seat})</span></div>
-                    <div>Thời gian: <span className="text-slate-655 dark:text-slate-200">{ticket.date} ({ticket.time})</span></div>
-                    <div>Hành khách: <span className="text-slate-655 dark:text-slate-200 uppercase">{ticket.name}</span></div>
+                    <div>Hành trình: <span className="text-slate-600 dark:text-slate-200">{ticket.route}</span></div>
+                    <div>Chuyến bay: <span className="text-slate-600 dark:text-slate-200">{ticket.flight} (Ghế {ticket.seat})</span></div>
+                    <div>Thời gian: <span className="text-slate-600 dark:text-slate-200">{ticket.date} ({ticket.time})</span></div>
+                    <div>Hành khách: <span className="text-slate-600 dark:text-slate-200 uppercase">{ticket.name}</span></div>
                   </div>
                   <div className="flex gap-2 pt-2">
                     <button
