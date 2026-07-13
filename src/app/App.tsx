@@ -1708,6 +1708,81 @@ function FlexDatePicker({ label, day, month, year, onDay, onMonth, onYear, requi
   );
 }
 
+function handleDownloadPDF(paxName: string, flight: string, seat: string, pnr: string, price: number) {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return;
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Vietravel Airlines E-Ticket - ${pnr}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1e293b; background-color: #f8fafc; }
+          .ticket { border: 2px solid #004b87; border-radius: 16px; padding: 30px; max-width: 600px; margin: 0 auto; background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+          .header { text-align: center; border-bottom: 2px solid #f26722; padding-bottom: 20px; margin-bottom: 20px; }
+          .logo { font-size: 26px; font-weight: 900; color: #004b87; margin: 0; }
+          .logo span { color: #f26722; font-size: 14px; text-transform: uppercase; font-weight: 800; display: block; tracking-widest: 2px; }
+          .title { font-size: 16px; font-weight: 800; margin-top: 12px; color: #475569; letter-spacing: 1px; }
+          .table-info { width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px; }
+          .table-info td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+          .table-info td:first-child { color: #64748b; font-weight: 600; width: 40%; }
+          .table-info td:last-child { font-weight: 700; color: #0f172a; }
+          .pnr-val { font-family: monospace; font-size: 18px; font-weight: 900 !important; color: #004b87 !important; }
+          .footer { text-align: center; border-top: 1px dashed #cbd5e1; padding-top: 20px; font-size: 11px; color: #64748b; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div class="ticket">
+          <div class="header">
+            <h1 class="logo">Vietravel <span>Airlines</span></h1>
+            <div class="title">VÉ ĐIỆN TỬ & XÁC NHẬN HÀNH TRÌNH</div>
+          </div>
+          <table class="table-info">
+            <tr>
+              <td>Hành khách:</td>
+              <td>${paxName.toUpperCase()}</td>
+            </tr>
+            <tr>
+              <td>Mã đặt chỗ (PNR):</td>
+              <td class="pnr-val">${pnr}</td>
+            </tr>
+            <tr>
+              <td>Chuyến bay:</td>
+              <td>${flight}</td>
+            </tr>
+            <tr>
+              <td>Ghế ngồi:</td>
+              <td>${seat}</td>
+            </tr>
+            <tr>
+              <td>Hạng vé:</td>
+              <td>Phổ thông (Economy)</td>
+            </tr>
+            <tr>
+              <td>Tổng thanh toán:</td>
+              <td style="color: #f26722; font-size: 16px;">$${price}</td>
+            </tr>
+            <tr>
+              <td>Trạng thái vé:</td>
+              <td style="color: #10b981;">ĐÃ XÁC NHẬN (CONFIRMED)</td>
+            </tr>
+          </table>
+          <div class="footer">
+            <p>Cảm ơn quý khách đã tin tưởng lựa chọn Vietravel Airlines!</p>
+            <p>Vui lòng xuất trình vé điện tử này cùng giấy tờ tùy thân hợp lệ khi làm thủ tục tại sân bay.</p>
+          </div>
+        </div>
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          }
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
 // ─── CCCD QR Scanner ──────────────────────────────────────────────────────────
 interface CCCDData {
   lastName: string; firstName: string;
@@ -2827,7 +2902,7 @@ function ETicket({ state }: { state: BookingState }) {
           </div>
         </div>
         <div className="flex gap-3 mt-6">
-          <button className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 rounded-xl text-sm font-semibold transition-all shadow-sm cursor-pointer">Tải vé PDF</button>
+          <button onClick={() => handleDownloadPDF(paxName, state.flightCode, pax?.seat || "—", bookRef, state.totalPrice)} className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 rounded-xl text-sm font-semibold transition-all shadow-sm cursor-pointer">Tải vé PDF</button>
           <button 
             onClick={() => window.location.reload()}
             className="flex-1 bg-primary hover:bg-blue-900 text-white py-3 rounded-xl text-sm font-bold transition-all shadow-lg shadow-primary/20 cursor-pointer"
