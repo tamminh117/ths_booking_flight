@@ -3219,10 +3219,10 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
         )}
 
         {step === "rescheduleFlight" && (
-          <div className="space-y-4">
+          <div className="space-y-4 pb-20">
             <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Chọn chuyến bay mới vào ngày {newDate}:</p>
             <div className="space-y-3">
-              {SIMULATED_FLIGHTS.map(fl => (
+              {SIMULATED_FLIGHTS.filter(fl => !selectedNewFlight || selectedNewFlight.code === fl.code).map(fl => (
                 <button
                   key={fl.code}
                   type="button"
@@ -3250,6 +3250,18 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
                 </button>
               ))}
             </div>
+
+            {selectedNewFlight && (
+              <div className="text-right -mt-1">
+                <button
+                  type="button"
+                  onClick={() => { setSelectedNewFlight(null); setSelectedNewSeat(""); }}
+                  className="text-xs text-primary dark:text-accent font-bold hover:underline cursor-pointer"
+                >
+                  Đổi sang chuyến bay khác
+                </button>
+              </div>
+            )}
 
             {selectedNewFlight && (
               <div className="mt-4 p-4 bg-slate-50 dark:bg-[#00223f] border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
