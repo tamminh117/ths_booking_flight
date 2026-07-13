@@ -676,7 +676,7 @@ const DESTINATIONS = [
   { name: "TP. Hồ Chí Minh", accommodations: "16,760 chỗ ở", image: "https://live.staticflickr.com/901/40233550605_9f84f99503_b.jpg" }
 ];
 
-function Homepage({ state, setState, onSearch, onAuth, onRefund }: { state: BookingState; setState: (s: Partial<BookingState>) => void; onSearch: () => void; onAuth: (mode: "signin" | "signup") => void; onRefund: () => void }) {
+function Homepage({ state, setState, onSearch, onAuth, onRefund, onLookup }: { state: BookingState; setState: (s: Partial<BookingState>) => void; onSearch: () => void; onAuth: (mode: "signin" | "signup") => void; onRefund: () => void; onLookup: () => void }) {
   const [promoInput, setPromoInput] = useState(state.promoCode);
   const [promoApplied, setPromoApplied] = useState(!!state.promoCode);
   const [showPromo, setShowPromo] = useState(false);
@@ -701,6 +701,7 @@ function Homepage({ state, setState, onSearch, onAuth, onRefund }: { state: Book
         <div className="hidden md:flex items-center gap-6 text-slate-600 dark:text-slate-350 text-sm font-semibold">
           <button className="text-primary border-b-2 border-primary pb-1 dark:text-accent dark:border-accent">Vé máy bay</button>
           <button onClick={onRefund} className="hover:text-primary dark:hover:text-accent transition-colors cursor-pointer">Đổi lịch & Hoàn vé</button>
+          <button onClick={onLookup} className="hover:text-primary dark:hover:text-accent transition-colors cursor-pointer">Tra cứu qua SĐT</button>
         </div>
         <div className="flex items-center gap-3">
           <DarkModeToggle />
@@ -722,9 +723,17 @@ function Homepage({ state, setState, onSearch, onAuth, onRefund }: { state: Book
       {/* Search Widget Container (Traveloka style) */}
       <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-20">
         <GlassCard className="p-6 overflow-visible">
-          <h2 className="text-slate-800 font-extrabold text-base mb-5 pb-3 border-b border-slate-100">
-            Đặt vé máy bay trực tuyến
-          </h2>
+          <div className="flex justify-between items-center mb-5 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h2 className="text-slate-800 dark:text-slate-100 font-extrabold text-base">
+              Đặt vé máy bay trực tuyến
+            </h2>
+            <button 
+              onClick={onLookup}
+              className="text-xs text-primary dark:text-accent font-extrabold hover:underline cursor-pointer flex items-center gap-1.5"
+            >
+              <span>🔍</span> Tra cứu vé đã đặt qua SĐT
+            </button>
+          </div>
 
           {/* Controls row */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -3068,6 +3077,7 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
   // Reschedule specifics
   const [selectedNewFlight, setSelectedNewFlight] = useState<any>(null);
   const [selectedNewSeat, setSelectedNewSeat] = useState<string>("");
+  const [selectedNewFareClass, setSelectedNewFareClass] = useState<"economy" | "business">("economy");
   const [reschedulePaymentMethod, setReschedulePaymentMethod] = useState<string>("qr");
 
   const SIMULATED_FLIGHTS = [
@@ -3080,11 +3090,12 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
   const MINI_COLS = ["A", "B", "C", "D", "E", "F"];
   const MINI_OCCUPIED = new Set(["4B", "5C", "6E", "7D", "8B", "8E"]);
 
-  // Calculate fees at the top level of the component to avoid inline IIFE syntax issues in JSX
+  // Calculate fees including class selection
   const fareDiff = selectedNewFlight?.diff || 0;
   const seatFee = selectedNewSeat.endsWith("A") || selectedNewSeat.endsWith("F") ? 5 : 0;
   const changeFee = 15;
-  const totalExtra = changeFee + fareDiff + seatFee;
+  const classFee = selectedNewFareClass === "business" ? 50 : 0;
+  const totalExtra = changeFee + fareDiff + seatFee + classFee;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -3190,7 +3201,7 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
         )}
 
         {step === "rescheduleForm" && (
-          <div className="space-y-4">
+          <div className="space-y-4 pb-64"> {/* pb-64 prevents calendar clipping */}
             <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Chọn ngày khởi hành mới mong muốn đổi lịch.</p>
             <CalPicker label="Chọn ngày bay mới" value={newDate} onChange={setNewDate} />
             <div className="flex gap-3 pt-4">
@@ -3239,6 +3250,41 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
                 </button>
               ))}
             </div>
+
+            {selectedNewFlight && (
+              <div className="mt-4 p-4 bg-slate-50 dark:bg-[#00223f] border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-200">Chọn hạng vé mới mong muốn:</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedNewFareClass("economy")}
+                    className={cn(
+                      "p-3 rounded-xl border text-left transition-all cursor-pointer",
+                      selectedNewFareClass === "economy"
+                        ? "border-primary bg-blue-50/50 dark:border-accent dark:bg-[#001c2e] shadow-sm"
+                        : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                    )}
+                  >
+                    <div className="text-xs font-extrabold text-slate-850 dark:text-slate-200">Phổ thông (Economy)</div>
+                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">Không mất phí chênh lệch hạng</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedNewFareClass("business")}
+                    className={cn(
+                      "p-3 rounded-xl border text-left transition-all cursor-pointer",
+                      selectedNewFareClass === "business"
+                        ? "border-primary bg-blue-50/50 dark:border-accent dark:bg-[#001c2e] shadow-sm"
+                        : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                    )}
+                  >
+                    <div className="text-xs font-extrabold text-slate-850 dark:text-slate-200">Thương gia (Business)</div>
+                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">Nâng hạng: +$50</div>
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3 pt-4">
               <button type="button" onClick={() => setStep("rescheduleForm")} className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer">Quay lại</button>
               <button 
@@ -3316,6 +3362,10 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
                 <span className="text-slate-500">Phí dịch vụ chọn ghế {selectedNewSeat}:</span>
                 <span className="font-bold font-mono">${seatFee}</span>
               </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Nâng hạng vé ({selectedNewFareClass === "business" ? "Thương gia" : "Phổ thông"}):</span>
+                <span className="font-bold font-mono">${classFee}</span>
+              </div>
               <div className="flex justify-between text-sm font-extrabold border-t border-slate-200/50 dark:border-slate-800 pt-2 text-[#f26722]">
                 <span>Tổng chi phí thanh toán thêm:</span>
                 <span className="font-mono">${totalExtra}</span>
@@ -3371,15 +3421,114 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
             <p className="text-slate-555 dark:text-slate-450 text-xs font-semibold px-4 leading-relaxed">
               {actionType === "refund" 
                 ? "Yêu cầu đã được tiếp nhận. Tiền hoàn sẽ được xử lý vào tài khoản của quý khách trong vòng 3-5 ngày làm việc."
-                : `Lịch bay mới đã được xác nhận sang ngày ${newDate} trên chuyến bay ${selectedNewFlight?.code} (Giờ bay: ${selectedNewFlight?.time}). Ghế ngồi mới của quý khách là ${selectedNewSeat}. Vé điện tử mới đã được gửi tới email.`}
+                : `Lịch bay mới đã được xác nhận sang ngày ${newDate} trên chuyến bay ${selectedNewFlight?.code} (Hạng vé: ${selectedNewFareClass === "business" ? "Thương gia" : "Phổ thông"}, Giờ bay: ${selectedNewFlight?.time}). Ghế ngồi mới của quý khách là ${selectedNewSeat}. Vé điện tử mới đã được gửi tới email.`}
             </p>
+            <div className="flex gap-3 justify-center pt-6">
+              {actionType === "reschedule" && (
+                <button
+                  type="button"
+                  onClick={() => handleDownloadPDF(lastName ? `${lastName} NGUYEN` : "NGUYỄN VĂN MINH", selectedNewFlight?.code || "VU751", selectedNewSeat || "—", bookingRef, totalExtra)}
+                  className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-6 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
+                >
+                  Tải vé PDF mới
+                </button>
+              )}
+              <button 
+                type="button"
+                onClick={onClose}
+                className="bg-primary dark:bg-accent text-white dark:text-primary px-6 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Đóng cửa sổ
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+function LookupTicketModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [results, setResults] = useState<any[]>([]);
+
+  const handleLookup = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setSearched(true);
+      setResults([
+        { pnr: "VTA8X1", route: "TP. Hồ Chí Minh (SGN) → Phú Quốc (PQC)", date: "14/07/2026", time: "08:35", flight: "VU751", seat: "4A", price: 120, name: "NGUYEN VAN MINH" },
+        { pnr: "VTA9Y2", route: "Hà Nội (HAN) → Đà Nẵng (DAD)", date: "20/07/2026", time: "10:15", flight: "VU753", seat: "5D", price: 145, name: "NGUYEN VAN MINH" }
+      ]);
+    }, 1000);
+  };
+
+  if (!open) return null;
+
+  return (
+    <Modal open={open} onClose={onClose} title="Tra cứu vé qua SĐT">
+      <div className="p-5 text-slate-800 dark:text-slate-100 max-h-[80vh] overflow-y-auto">
+        {!searched ? (
+          <form onSubmit={handleLookup} className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Nhập số điện thoại đã sử dụng khi đặt vé để tra cứu toàn bộ danh sách vé.</p>
+            <InputField label="Số điện thoại" value={phone} onChange={setPhone} placeholder="09xxxxxxxx" type="tel" required />
             <button 
-              type="button"
-              onClick={onClose}
-              className="mt-6 bg-primary dark:bg-accent text-white dark:text-primary px-6 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-primary dark:bg-accent text-white dark:text-primary py-3 rounded-xl text-sm font-bold shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer mt-6"
             >
-              Đóng cửa sổ
+              {loading ? (
+                <motion.div animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="w-4 h-4 border-2 border-white dark:border-primary border-t-transparent rounded-full" />
+              ) : "Tra cứu danh sách vé"}
             </button>
+          </form>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Tìm thấy {results.length} vé đặt dưới số điện thoại {phone}:</p>
+            <div className="space-y-3">
+              {results.map(ticket => (
+                <div key={ticket.pnr} className="bg-slate-50 dark:bg-[#00223f] border border-slate-150 dark:border-slate-800 rounded-2xl p-4 space-y-2 shadow-sm">
+                  <div className="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-850 pb-2">
+                    <span className="text-xs font-bold text-[#004b87] dark:text-accent font-mono">{ticket.pnr}</span>
+                    <span className="text-[10px] bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded font-bold">Đã xác nhận</span>
+                  </div>
+                  <div className="text-xs space-y-1 font-bold">
+                    <div>Hành trình: <span className="text-slate-655 dark:text-slate-200">{ticket.route}</span></div>
+                    <div>Chuyến bay: <span className="text-slate-655 dark:text-slate-200">{ticket.flight} (Ghế {ticket.seat})</span></div>
+                    <div>Thời gian: <span className="text-slate-655 dark:text-slate-200">{ticket.date} ({ticket.time})</span></div>
+                    <div>Hành khách: <span className="text-slate-655 dark:text-slate-200 uppercase">{ticket.name}</span></div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => handleDownloadPDF(ticket.name, ticket.flight, ticket.seat, ticket.pnr, ticket.price)}
+                      className="flex-1 bg-white hover:bg-slate-100 border border-slate-200 dark:border-slate-850 dark:bg-card dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+                    >
+                      Tải vé PDF
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-4">
+              <button 
+                type="button" 
+                onClick={() => { setSearched(false); setPhone(""); }}
+                className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Tra cứu số khác
+              </button>
+              <button 
+                type="button" 
+                onClick={onClose}
+                className="flex-1 bg-primary dark:bg-accent text-white dark:text-primary py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -3393,6 +3542,7 @@ export default function App() {
   function setState(p:Partial<BookingState>){ setRaw(prev=>{ const n={...prev,...p}; n.totalPrice=n.baseFare+n.taxFee+n.ancillaryFee; return n; }); }
   const [authModal, setAuthModal] = useState<"signin" | "signup" | null>(null);
   const [refundOpen, setRefundOpen] = useState(false);
+  const [lookupOpen, setLookupOpen] = useState(false);
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -3407,13 +3557,14 @@ export default function App() {
     <div className="w-full min-h-screen bg-background text-foreground" style={{fontFamily:"'Inter', sans-serif",scrollbarWidth:"none"}}>
       <style>{`::-webkit-scrollbar{display:none}*{scrollbar-width:none}`}</style>
       <AnimatePresence mode="wait">
-        {step===0&&<motion.div key="s0" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0,x:-16}} transition={{duration:0.22}}><Homepage state={state} setState={setState} onSearch={()=>setStep(1)} onAuth={(m) => setAuthModal(m)} onRefund={() => setRefundOpen(true)}/></motion.div>}
+        {step===0&&<motion.div key="s0" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0,x:-16}} transition={{duration:0.22}}><Homepage state={state} setState={setState} onSearch={()=>setStep(1)} onAuth={(m) => setAuthModal(m)} onRefund={() => setRefundOpen(true)} onLookup={() => setLookupOpen(true)}/></motion.div>}
         {step===1&&<motion.div key="s1" initial={{opacity:0,x:16}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-16}} transition={{duration:0.22}}><SelectFlight state={state} setState={setState} onNext={()=>setStep(2)} onBack={()=>setStep(0)}/></motion.div>}
         {step===2&&<motion.div key="s2" initial={{opacity:0,x:16}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-16}} transition={{duration:0.22}}><Details state={state} setState={setState} onNext={()=>setStep(3)} onBack={()=>setStep(1)}/></motion.div>}
         {step===3&&<motion.div key="s3" initial={{opacity:0,x:16}} animate={{opacity:1,x:0}} exit={{opacity:0}} transition={{duration:0.22}}><Payment state={state} onBack={()=>setStep(2)}/></motion.div>}
       </AnimatePresence>
       <AuthModal open={authModal !== null} mode={authModal} onClose={() => setAuthModal(null)} onSwitch={(m) => setAuthModal(m)} />
       <RefundRescheduleModal open={refundOpen} onClose={() => setRefundOpen(false)} />
+      <LookupTicketModal open={lookupOpen} onClose={() => setLookupOpen(false)} />
     </div>
   );
 }
