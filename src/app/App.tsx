@@ -1530,7 +1530,7 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
               </div>
 
               {/* Drawer Content */}
-              <div className="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-6 overflow-y-auto flex-1 min-h-0 grid grid-cols-1 md:grid-cols-3 gap-4">
                 {FARE_CLASSES.map(fc => {
                   const totalPrice = Math.round(drawerFlight.base * fc.mult);
                   return (
