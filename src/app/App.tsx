@@ -932,6 +932,7 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
   // Drawer select package
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerFlight, setDrawerFlight] = useState<any>(null);
+  const [expandedFareId, setExpandedFareId] = useState<string>("economy");
 
   const pax = state.passengers.adults + state.passengers.children;
 
@@ -1529,52 +1530,89 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
                 </button>
               </div>
 
-              {/* Drawer Content */}
+              {/* Drawer Content with mobile Accordion styling */}
               <div className="p-6 overflow-y-auto flex-1 min-h-0 grid grid-cols-1 md:grid-cols-3 gap-4">
                 {FARE_CLASSES.map(fc => {
                   const totalPrice = Math.round(drawerFlight.base * fc.mult);
+                  const isExpanded = expandedFareId === fc.id;
                   return (
-                    <div key={fc.id} className="border border-slate-200 hover:border-primary/40 rounded-2xl overflow-hidden flex flex-col bg-white shadow-sm hover:shadow-md transition-all">
-                      <div className="p-4 border-b border-slate-100 text-center" style={{ backgroundColor: `${fc.accent}12` }}>
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: fc.accent }}>
-                          {fc.labelEn}
-                        </span>
-                        <h4 className="text-slate-800 font-black text-lg mt-0.5">{fc.label}</h4>
-                      </div>
-                      
-                      {/* Price box */}
-                      <div className="p-4 text-center border-b border-slate-50">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Giá hành khách</span>
-                        <span className="text-primary text-2xl font-black">${totalPrice}</span>
-                        <span className="text-slate-400 text-[10px] font-semibold block mt-0.5">đã gồm thuế hàng không</span>
-                      </div>
-
-                      {/* Perks */}
-                      <div className="p-5 flex-1 space-y-3.5 text-xs text-slate-600">
-                        <div className="flex items-start gap-2">
-                          <span className="text-emerald-600 font-bold">✓</span>
-                          <span>Bao gồm <b>{fc.baggage.cabin}</b> hành lý xách tay</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="text-emerald-600 font-bold">✓</span>
-                          <span>Hành lý ký gửi: <b>{fc.baggage.checked}</b></span>
-                        </div>
-                        {fc.perks.slice(2).map((perk, pi) => (
-                          <div key={pi} className="flex items-start gap-2">
-                            <span className="text-emerald-600 font-bold">✓</span>
-                            <span>{perk}</span>
+                    <div 
+                      key={fc.id} 
+                      className={cn(
+                        "border rounded-2xl overflow-hidden flex flex-col bg-white transition-all duration-200 select-none",
+                        isExpanded 
+                          ? "border-primary dark:border-accent shadow-md ring-1 ring-primary/10 dark:ring-accent/10" 
+                          : "border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 shadow-sm cursor-pointer"
+                      )}
+                      onClick={() => {
+                        if (!isExpanded) setExpandedFareId(fc.id);
+                      }}
+                    >
+                      {/* Mobile Collapsed State */}
+                      <div className="md:hidden block">
+                        {!isExpanded && (
+                          <div className="p-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ color: fc.accent, backgroundColor: `${fc.accent}12` }}>
+                                {fc.labelEn}
+                              </span>
+                              <h4 className="text-slate-800 dark:text-slate-100 font-bold text-sm">{fc.label}</h4>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-primary dark:text-accent font-black text-sm">${totalPrice}</span>
+                              <ChevronDown size={14} className="text-slate-400 dark:text-slate-500" />
+                            </div>
                           </div>
-                        ))}
+                        )}
                       </div>
 
-                      {/* Select button */}
-                      <div className="p-4 border-t border-slate-100 bg-slate-50">
-                        <button
-                          onClick={() => handleSelectPackage(drawerFlight.code, fc.id, drawerFlight.base)}
-                          className="w-full bg-primary hover:bg-blue-900 text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm"
-                        >
-                          Chọn gói này
-                        </button>
+                      {/* Full details state (always on desktop, expanded only on mobile) */}
+                      <div className={cn(isExpanded ? "block" : "hidden md:flex md:flex-col flex-1")}>
+                        <div className="p-4 border-b border-slate-100 dark:border-slate-800 text-center" style={{ backgroundColor: `${fc.accent}12` }}>
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: fc.accent }}>
+                            {fc.labelEn}
+                          </span>
+                          <h4 className="text-slate-800 dark:text-slate-100 font-black text-lg mt-0.5">{fc.label}</h4>
+                        </div>
+                        
+                        {/* Price box */}
+                        <div className="p-4 text-center border-b border-slate-50 dark:border-slate-850">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Giá hành khách</span>
+                          <span className="text-primary dark:text-accent text-2xl font-black">${totalPrice}</span>
+                          <span className="text-slate-400 dark:text-slate-500 text-[10px] font-semibold block mt-0.5">đã gồm thuế hàng không</span>
+                        </div>
+
+                        {/* Perks */}
+                        <div className="p-5 flex-1 space-y-3.5 text-xs text-slate-655 dark:text-slate-300">
+                          <div className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-bold">✓</span>
+                            <span>Bao gồm <b>{fc.baggage.cabin}</b> hành lý xách tay</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-bold">✓</span>
+                            <span>Hành lý ký gửi: <b>{fc.baggage.checked}</b></span>
+                          </div>
+                          {fc.perks.slice(2).map((perk, pi) => (
+                            <div key={pi} className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold">✓</span>
+                              <span>{perk}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Select button */}
+                        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-card">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation(); // prevent event bubble trigger
+                              handleSelectPackage(drawerFlight.code, fc.id, drawerFlight.base);
+                            }}
+                            className="w-full bg-primary hover:bg-blue-900 text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm dark:bg-accent dark:text-primary dark:hover:bg-accent/85 cursor-pointer"
+                          >
+                            Chọn gói này
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
