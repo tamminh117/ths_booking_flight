@@ -5,6 +5,7 @@ import {
   Luggage, Utensils, Coffee, Star, Shield, Check, CreditCard,
   QrCode, ChevronDown, ChevronLeft, X, Plus, Minus, ArrowLeftRight,
   Armchair, Info, Tag, AlertCircle, ScanLine, Camera, ChevronUp,
+  Sun, Moon,
 } from "lucide-react";
 import jsQR from "jsqr";
 
@@ -164,6 +165,7 @@ function SeatModal({ open, onClose, details, onConfirm }: { open: boolean; onClo
   const paxCount = details.length;
   const [localSeats, setLocalSeats] = useState<string[]>(() => details.map(d => d.seat));
   const [activePax, setActivePax] = useState(0);
+  const [hoveredSeat, setHoveredSeat] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -200,7 +202,7 @@ function SeatModal({ open, onClose, details, onConfirm }: { open: boolean; onClo
     if (UNAVAILABLE.has(seat)) return "bg-slate-100 border-slate-200 cursor-not-allowed text-slate-300";
     const op = localSeats.findIndex((s, i) => s === seat && i !== activePax);
     if (op >= 0) return "bg-emerald-50 border-emerald-300 text-emerald-700 cursor-pointer font-bold";
-    if (localSeats[activePax] === seat) return "bg-primary border-primary text-white shadow-md shadow-primary/20 scale-105 z-10 relative";
+    if (localSeats[activePax] === seat) return "bg-primary text-white border-2 border-accent shadow-[0_0_12px_#EAA135] scale-105 z-10 relative";
     const z = getZone(row);
     if (z === "business") return "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 cursor-pointer";
     if (z === "premium") return "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer";
@@ -252,7 +254,7 @@ function SeatModal({ open, onClose, details, onConfirm }: { open: boolean; onClo
                   <span className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0", isAct ? "bg-white/20 text-white" : seat ? "bg-emerald-100" : "bg-slate-200 text-slate-500")}>
                     {i + 1}
                   </span>
-                  <span className="max-w-[110px] truncate">{getName(i)}</span>
+                  <span className="max-w-[240px] truncate">{getName(i)}</span>
                   {seat && <span className="font-mono text-xs font-bold ml-1">{seat}</span>}
                   {seat && !isAct && <Check size={10} className="ml-1 text-emerald-600" />}
                 </button>
@@ -304,14 +306,43 @@ function SeatModal({ open, onClose, details, onConfirm }: { open: boolean; onClo
                       const seat = `${row}${col}`;
                       const unavail = UNAVAILABLE.has(seat);
                       const op = localSeats.findIndex((s, i) => s === seat && i !== activePax);
+                      const isWindow = col === "A" || col === "F";
                       return (
                         <button
                           key={col}
                           onClick={() => click(seat)}
                           disabled={unavail}
-                          className={cn("w-9 h-8 rounded-md border text-[10px] font-bold transition-all duration-100", ci === 3 && "ml-5", seatCls(seat, row))}
+                          onMouseEnter={() => !unavail && setHoveredSeat(seat)}
+                          onMouseLeave={() => setHoveredSeat(null)}
+                          className={cn("relative w-9 h-8 rounded-md border text-[10px] font-bold transition-all duration-100", ci === 3 && "ml-5", seatCls(seat, row))}
                         >
                           {unavail ? "×" : op >= 0 ? String(op + 1) : col}
+                          
+                          {/* Tooltip Hover Preview */}
+                          {hoveredSeat === seat && !unavail && (
+                            isWindow ? (
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-44 bg-[#001a2e] border border-[#EAA135]/50 rounded-2xl p-3 shadow-2xl z-30 pointer-events-none text-center">
+                                <div className="text-[10px] text-[#EAA135] font-extrabold uppercase tracking-wider mb-2">Góc nhìn cửa sổ ({seat})</div>
+                                <div className="w-24 h-28 bg-gradient-to-b from-[#1d4ed8] to-[#60a5fa] rounded-full mx-auto relative border-[5px] border-slate-300 overflow-hidden flex items-center justify-center shadow-inner">
+                                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-18 h-8 bg-white/30 rounded-full blur-[1px]" />
+                                  <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-20 h-9 bg-white/40 rounded-full blur-[1px]" />
+                                  <div className="absolute bottom-0 right-0 w-14 h-14 bg-slate-100 border-l-2 border-t-2 border-slate-300" style={{ clipPath: "polygon(0 100%, 100% 0, 100% 100%)" }} />
+                                  <div className="absolute bottom-2 right-0 w-11 h-9 bg-slate-200" style={{ clipPath: "polygon(0 100%, 100% 100%, 100% 30%)" }} />
+                                  <div className="absolute top-2 left-4 w-6 h-6 rounded-full bg-amber-200/50 blur-[3px]" />
+                                </div>
+                                <div className="text-[10px] text-white/85 font-bold mt-2 leading-tight">Ghế rộng 46cm<br/>Góc nhìn mây bay</div>
+                              </div>
+                            ) : (
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-40 bg-[#001a2e] border border-blue-500/40 rounded-2xl p-3 shadow-2xl z-30 pointer-events-none text-center">
+                                <div className="text-[10px] text-[#EAA135] font-extrabold uppercase tracking-wider mb-2">Hạng ghế ({seat})</div>
+                                <div className="text-[10px] text-white/80 space-y-1 text-left font-bold">
+                                  <div>• Khoảng cách: 31" (79cm)</div>
+                                  <div>• Chiều rộng: 18" (46cm)</div>
+                                  <div>• Sạc di động: Có sẵn</div>
+                                </div>
+                              </div>
+                            )
+                          )}
                         </button>
                       );
                     })}
@@ -645,7 +676,7 @@ const DESTINATIONS = [
   { name: "TP. Hồ Chí Minh", accommodations: "16,760 chỗ ở", image: "https://live.staticflickr.com/901/40233550605_9f84f99503_b.jpg" }
 ];
 
-function Homepage({ state, setState, onSearch }: { state: BookingState; setState: (s: Partial<BookingState>) => void; onSearch: () => void }) {
+function Homepage({ state, setState, onSearch, onAuth, onRefund }: { state: BookingState; setState: (s: Partial<BookingState>) => void; onSearch: () => void; onAuth: (mode: "signin" | "signup") => void; onRefund: () => void }) {
   const [promoInput, setPromoInput] = useState(state.promoCode);
   const [promoApplied, setPromoApplied] = useState(!!state.promoCode);
   const [showPromo, setShowPromo] = useState(false);
@@ -655,25 +686,26 @@ function Homepage({ state, setState, onSearch }: { state: BookingState; setState
   const ok = state.origin && state.destination && state.departDate && (state.tripType === "oneway" || state.returnDate);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-16" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 dark:bg-background pb-16 text-slate-800 dark:text-slate-100" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Top Navbar */}
-      <nav className="bg-white border-b border-slate-200 flex items-center justify-between px-8 py-4 sticky top-0 z-40 shadow-sm">
+      <nav className="bg-white dark:bg-card border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 py-4 sticky top-0 z-40 shadow-sm text-slate-800 dark:text-slate-100">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
             <Plane size={18} className="text-accent rotate-45" />
           </div>
           <div>
-            <div className="text-primary font-black text-lg leading-none">Vietravel</div>
+            <div className="text-primary dark:text-slate-200 font-black text-lg leading-none">Vietravel</div>
             <div className="text-accent text-[9px] font-extrabold tracking-widest">AIRLINES</div>
           </div>
         </div>
-        <div className="hidden md:flex items-center gap-6 text-slate-600 text-sm font-semibold">
-          <button className="text-primary border-b-2 border-primary pb-1">Vé máy bay</button>
-          <button className="hover:text-primary transition-colors">Đổi lịch & Hoàn vé</button>
+        <div className="hidden md:flex items-center gap-6 text-slate-600 dark:text-slate-350 text-sm font-semibold">
+          <button className="text-primary border-b-2 border-primary pb-1 dark:text-accent dark:border-accent">Vé máy bay</button>
+          <button onClick={onRefund} className="hover:text-primary dark:hover:text-accent transition-colors cursor-pointer">Đổi lịch & Hoàn vé</button>
         </div>
         <div className="flex items-center gap-3">
-          <button className="text-primary hover:bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold transition-all">Đăng nhập</button>
-          <button className="bg-primary hover:bg-blue-900 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all">Đăng ký</button>
+          <DarkModeToggle />
+          <button onClick={() => onAuth("signin")} className="text-primary hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer">Đăng nhập</button>
+          <button onClick={() => onAuth("signup")} className="bg-primary hover:bg-blue-900 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all dark:bg-accent dark:text-primary dark:hover:bg-accent/85 cursor-pointer">Đăng ký</button>
         </div>
       </nav>
 
@@ -881,6 +913,8 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
   const [directOnlyFilter, setDirectOnlyFilter] = useState(false);
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>(["VU"]);
   const [selectedTimes, setSelectedTimes] = useState<string[]>(["early", "morning", "afternoon", "evening"]);
+  const [isEditingSearch, setIsEditingSearch] = useState(false);
+  const ok = state.origin && state.destination && state.departDate && (state.tripType === "oneway" || state.returnDate);
 
   // Expanded details inside flight cards
   const [expandedDetails, setExpandedDetails] = useState<string | null>(null);
@@ -968,36 +1002,143 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
   };
 
   return (
-    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 dark:bg-background text-slate-800 dark:text-slate-100" style={{ fontFamily: "'Inter', sans-serif" }}>
       <TopBar step={1} onBack={onBack} />
 
-      {/* Flight Search Summary Banner */}
-      <div className="bg-primary text-white border-b border-white/10 px-6 py-3.5 shadow-md">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-sm">
-            <span className="font-extrabold text-base">{state.origin}</span>
-            <ArrowLeftRight size={13} className="text-accent shrink-0" />
-            <span className="font-extrabold text-base">{state.destination}</span>
-            <div className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
-            <span className="text-white/80 font-medium">{state.departDate}</span>
-            {state.tripType === "roundtrip" && state.returnDate && (
-              <>
-                <span className="text-white/40">↩</span>
-                <span className="text-white/80 font-medium">{state.returnDate}</span>
-              </>
-            )}
-            <div className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
-            <span className="text-white/80 font-medium">{pax} hành khách</span>
-            <div className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
-            <span className="text-accent font-bold font-mono text-xs uppercase bg-accent/15 px-2 py-0.5 rounded border border-accent/20">
-              {FARE_CLASSES.find(f => f.id === (state.fareClass || "economy"))?.label}
-            </span>
+      {isEditingSearch ? (
+        <div className="bg-white dark:bg-card border-b border-slate-200 dark:border-slate-800 px-6 py-6 shadow-lg relative z-30 text-slate-800 dark:text-slate-100">
+          <div className="max-w-6xl mx-auto space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-2">
+              <h3 className="font-extrabold text-sm text-primary dark:text-accent flex items-center gap-2">
+                <span>✈️</span> Chỉnh sửa tìm kiếm chuyến bay
+              </h3>
+              <button 
+                onClick={() => setIsEditingSearch(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+
+            {/* Controls row */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                {(["oneway", "roundtrip"] as const).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setState({ tripType: t, returnDate: "" })}
+                    className={cn(
+                      "px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
+                      t === state.tripType 
+                        ? "bg-white dark:bg-[#00223f] text-primary dark:text-accent shadow-sm" 
+                        : "text-slate-500 hover:text-primary dark:text-slate-400"
+                    )}
+                  >
+                    {t === "oneway" ? "Một chiều" : "Khứ hồi"}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-350">
+                <label className="flex items-center gap-2 cursor-pointer mr-2">
+                  <input
+                    type="checkbox"
+                    checked={directOnlyFilter}
+                    onChange={e => setDirectOnlyFilter(e.target.checked)}
+                    className="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4"
+                  />
+                  <span>Chỉ bay thẳng</span>
+                </label>
+
+                <PaxPicker
+                  value={state.passengers}
+                  onChange={p => {
+                    const t = p.adults + p.children;
+                    setState({ passengers: p, passengerDetails: Array(t).fill(null).map(() => emptyPax()) });
+                  }}
+                  className="w-56"
+                />
+
+                <ClassPicker
+                  value={state.fareClass || "economy"}
+                  onChange={v => setState({ fareClass: v })}
+                  className="w-56"
+                />
+              </div>
+            </div>
+
+            {/* Input Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
+              <div className="lg:col-span-3">
+                <CityDrop label="Từ" value={state.origin} onChange={v => setState({ origin: v })} exclude={state.destination} />
+              </div>
+              <div className="relative flex justify-center lg:col-span-1 lg:h-[72px] lg:items-center">
+                <button
+                  onClick={() => setState({ origin: state.destination, destination: state.origin })}
+                  className="w-10 h-10 bg-white dark:bg-[#001a2e] border border-slate-200 dark:border-slate-800 rounded-full flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-md active:scale-95 z-10 cursor-pointer"
+                >
+                  <ArrowLeftRight size={14} className="text-primary dark:text-accent rotate-90 lg:rotate-0" />
+                </button>
+              </div>
+              <div className="lg:col-span-3">
+                <CityDrop label="Đến" value={state.destination} onChange={v => setState({ destination: v })} exclude={state.origin} />
+              </div>
+              <div className="lg:col-span-2">
+                <CalPicker label="Ngày đi" value={state.departDate} onChange={v => setState({ departDate: v })} />
+              </div>
+              <div className="lg:col-span-2">
+                <CalPicker
+                  label="Ngày về"
+                  value={state.tripType === "roundtrip" ? state.returnDate : ""}
+                  onChange={v => setState({ returnDate: v })}
+                  placeholder="Chọn ngày về"
+                  disabled={state.tripType !== "roundtrip"}
+                />
+              </div>
+              <div className="lg:col-span-1">
+                <button
+                  onClick={() => setIsEditingSearch(false)}
+                  disabled={!ok}
+                  className={cn(
+                    "w-full h-[72px] rounded-xl flex items-center justify-center transition-all shadow-lg active:scale-95 cursor-pointer font-bold text-sm",
+                    ok ? "bg-[#F26722] hover:bg-orange-600 text-white shadow-orange-500/20" : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+                  )}
+                >
+                  Tìm kiếm
+                </button>
+              </div>
+            </div>
           </div>
-          <button onClick={onBack} className="text-accent hover:text-white text-xs font-bold transition-all border border-accent/30 hover:border-white px-3 py-1.5 rounded-xl">
-            Thay đổi tìm kiếm
-          </button>
         </div>
-      </div>
+      ) : (
+        /* Flight Search Summary Banner */
+        <div className="bg-primary text-white border-b border-white/10 px-6 py-3.5 shadow-md">
+          <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-sm">
+              <span className="font-extrabold text-base">{state.origin}</span>
+              <ArrowLeftRight size={13} className="text-accent shrink-0" />
+              <span className="font-extrabold text-base">{state.destination}</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
+              <span className="text-white/80 font-medium">{state.departDate}</span>
+              {state.tripType === "roundtrip" && state.returnDate && (
+                <>
+                  <span className="text-white/40">↩</span>
+                  <span className="text-white/80 font-medium">{state.returnDate}</span>
+                </>
+              )}
+              <div className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
+              <span className="text-white/80 font-medium">{pax} hành khách</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
+              <span className="text-accent font-bold font-mono text-xs uppercase bg-accent/15 px-2 py-0.5 rounded border border-accent/20">
+                {FARE_CLASSES.find(f => f.id === (state.fareClass || "economy"))?.label}
+              </span>
+            </div>
+            <button onClick={() => setIsEditingSearch(true)} className="text-accent hover:text-white text-xs font-bold transition-all border border-accent/30 hover:border-white px-3 py-1.5 rounded-xl cursor-pointer">
+              Thay đổi tìm kiếm
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-6 py-7 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
@@ -1092,8 +1233,8 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
             <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Sắp xếp theo:</span>
             <div className="flex gap-2">
               {[
-                { id: "price", label: "Giá thấp nhất 💵" },
-                { id: "duration", label: "Thời gian ngắn nhất ⏱️" }
+                { id: "price", label: "Giá thấp nhất ↓" },
+                { id: "duration", label: "Thời gian bay ngắn nhất ↓" }
               ].map(opt => (
                 <button
                   key={opt.id}
@@ -1102,7 +1243,7 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
                     "px-4 py-2 rounded-lg text-xs font-bold transition-all border",
                     sortBy === opt.id 
                       ? "bg-primary border-primary text-white" 
-                      : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                      : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-card dark:border-slate-800 dark:text-slate-350 dark:hover:bg-slate-800"
                   )}
                 >
                   {opt.label}
@@ -1218,10 +1359,10 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
                           }
                         }}
                         className={cn(
-                          "px-3 py-1.5 rounded-lg border transition-all cursor-pointer font-bold",
+                          "px-3 py-1.5 rounded-lg border transition-all cursor-pointer font-bold text-xs",
                           showDetails && activeDetailTab === "details"
-                            ? "bg-primary text-white border-primary shadow-sm"
-                            : "bg-white hover:bg-slate-100 text-slate-655 border-slate-200 hover:text-slate-800"
+                            ? "bg-primary dark:bg-accent text-white dark:text-primary border-primary dark:border-accent shadow-sm"
+                            : "bg-blue-50/70 hover:bg-blue-100/90 dark:bg-[#00223f] dark:hover:bg-slate-800 text-[#004b87] dark:text-[#EAA135] border-blue-200/60 dark:border-[#EAA135]/30 hover:text-blue-900"
                         )}
                       >
                         Chi tiết chuyến bay
@@ -1236,10 +1377,10 @@ function SelectFlight({ state, setState, onNext, onBack }: { state: BookingState
                           }
                         }}
                         className={cn(
-                          "px-3 py-1.5 rounded-lg border transition-all cursor-pointer font-bold",
+                          "px-3 py-1.5 rounded-lg border transition-all cursor-pointer font-bold text-xs",
                           showDetails && activeDetailTab === "benefits"
-                            ? "bg-primary text-white border-primary shadow-sm"
-                            : "bg-white hover:bg-slate-100 text-slate-655 border-slate-200 hover:text-slate-800"
+                            ? "bg-primary dark:bg-accent text-white dark:text-primary border-primary dark:border-accent shadow-sm"
+                            : "bg-blue-50/70 hover:bg-blue-100/90 dark:bg-[#00223f] dark:hover:bg-slate-800 text-[#004b87] dark:text-[#EAA135] border-blue-200/60 dark:border-[#EAA135]/30 hover:text-blue-900"
                         )}
                       >
                         Quyền lợi vé
@@ -1497,37 +1638,37 @@ function FlexDatePicker({ label, day, month, year, onDay, onMonth, onYear, requi
   const yearRange = Array.from({length: yearEnd - yearStart + 1}, (_, i) => yearEnd - i);
 
   return (
-    <div className="flex flex-col gap-1" ref={ref}>
+    <div className="flex flex-col gap-1.5" ref={ref}>
       {label && (
-        <label className="text-white/40 text-xs font-semibold uppercase tracking-wider">
-          {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+        <label className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+          {label}{required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
       <div className="relative">
         <button onClick={() => { setOpen(o => !o); setPickingYear(false); }}
-          className="w-full text-left bg-white/6 border border-white/9 rounded-xl px-3 py-2 flex items-center gap-2 hover:border-white/20 focus:outline-none focus:border-primary/55 transition-all">
-          <Calendar size={12} className="text-accent shrink-0"/>
-          <span className={cn("text-xs flex-1 font-mono", hasDate ? "text-white" : "text-white/28")}>
+          className="w-full text-left bg-white dark:bg-card border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 flex items-center gap-2 hover:border-slate-350 focus:outline-none focus:border-primary transition-all text-sm cursor-pointer shadow-sm">
+          <Calendar size={13} className="text-accent shrink-0"/>
+          <span className={cn("text-sm flex-1 font-mono", hasDate ? "text-slate-800 dark:text-slate-200" : "text-slate-400 dark:text-slate-500")}>
             {displayVal || "DD/MM/YYYY"}
           </span>
-          <ChevronDown size={11} className={cn("text-white/28 transition-transform shrink-0", open && "rotate-180")}/>
+          <ChevronDown size={13} className={cn("text-slate-400 dark:text-slate-500 transition-transform shrink-0", open && "rotate-180")}/>
         </button>
 
         <AnimatePresence>
           {open && (
             <motion.div initial={{opacity:0,y:-4,scale:0.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-4,scale:0.98}} transition={{duration:0.12}}
-              className="absolute z-[150] top-full mt-1 left-0 w-56 bg-[#0f1a30] border border-white/12 rounded-xl overflow-hidden shadow-2xl">
+              className="absolute z-[150] top-full mt-1 left-0 w-56 bg-white dark:bg-[#001a2e] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-2xl text-slate-800 dark:text-slate-200">
               {/* Header */}
-              <div className="flex items-center justify-between px-2.5 py-2 border-b border-white/8">
+              <div className="flex items-center justify-between px-2.5 py-2 border-b border-slate-100 dark:border-slate-800">
                 <button onClick={() => vm===0?(setVm(11),setVy(y=>y-1)):setVm(m=>m-1)}
-                  className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/45 hover:text-white transition-colors"><ChevronLeft size={12}/></button>
+                  className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"><ChevronLeft size={12}/></button>
                 <button onClick={() => setPickingYear(v => !v)}
-                  className="flex items-center gap-1 text-white text-xs font-bold hover:text-accent transition-colors">
+                  className="flex items-center gap-1 text-slate-700 dark:text-slate-200 text-xs font-bold hover:text-[#004b87] dark:hover:text-accent transition-colors">
                   {MONTHS_SHORT[vm]} <span className="font-mono">{vy}</span>
-                  <ChevronDown size={10} className={cn("text-white/38 transition-transform", pickingYear && "rotate-180")}/>
+                  <ChevronDown size={10} className={cn("text-slate-400 dark:text-slate-500 transition-transform", pickingYear && "rotate-180")}/>
                 </button>
                 <button onClick={() => vm===11?(setVm(0),setVy(y=>y+1)):setVm(m=>m+1)}
-                  className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/10 text-white/45 hover:text-white transition-colors"><ChevronRight size={12}/></button>
+                  className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"><ChevronRight size={12}/></button>
               </div>
 
               {pickingYear ? (
@@ -1535,7 +1676,7 @@ function FlexDatePicker({ label, day, month, year, onDay, onMonth, onYear, requi
                   {yearRange.map(y => (
                     <button key={y} onClick={() => { setVy(y); setPickingYear(false); }}
                       className={cn("py-1 rounded-md text-[11px] font-semibold transition-all",
-                        y === vy ? "bg-primary text-white" : "text-white/50 hover:bg-white/10 hover:text-white")}>
+                        y === vy ? "bg-primary text-white font-bold" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white")}>
                       {y}
                     </button>
                   ))}
@@ -1543,16 +1684,16 @@ function FlexDatePicker({ label, day, month, year, onDay, onMonth, onYear, requi
               ) : (
                 <>
                   <div className="grid grid-cols-7 px-2.5 pt-1.5 pb-0.5">
-                    {DAYS_GRID.map(d => <div key={d} className="text-white/22 text-[9px] text-center font-bold">{d}</div>)}
+                    {DAYS_GRID.map(d => <div key={d} className="text-slate-400 dark:text-slate-500 text-[9px] text-center font-bold">{d}</div>)}
                   </div>
                   <div className="grid grid-cols-7 px-2.5 pb-2.5 gap-px">
                     {cells.map((d,i) => <div key={i}>{d === null ? <div/> :
                       <button onClick={() => pickDay(d)} disabled={isDisabled(d)}
                         className={cn("w-full aspect-square flex items-center justify-center rounded-md text-[11px] font-medium transition-all",
-                          isDisabled(d) ? "text-white/10 cursor-not-allowed"
+                          isDisabled(d) ? "text-slate-200 dark:text-slate-850 cursor-not-allowed"
                           : day===String(d).padStart(2,"0") && MONTHS_LABEL[vm]===month && String(vy)===year
-                            ? "bg-primary text-white"
-                            : "text-white/65 hover:bg-primary/35 hover:text-white cursor-pointer")}>
+                            ? "bg-primary text-white font-bold shadow-sm"
+                            : "text-slate-700 dark:text-slate-350 hover:bg-primary/20 dark:hover:bg-primary/30 hover:text-primary dark:hover:text-accent cursor-pointer")}>
                         {d}
                       </button>}
                     </div>)}
@@ -1882,7 +2023,7 @@ function Details({ state, setState, onNext, onBack }: { state: BookingState; set
   const infantFare = Math.round(state.baseFare * 0.10);
 
   return (
-    <div className="min-h-screen bg-slate-50" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 dark:bg-background text-slate-800 dark:text-slate-100" style={{ fontFamily: "'Inter', sans-serif" }}>
       <TopBar step={2} onBack={onBack} />
       
       <SeatModal open={seatOpen} onClose={() => setSeatOpen(false)} details={details} onConfirm={seats => setDetails(prev => prev.map((d, i) => ({ ...d, seat: seats[i] ?? "" })))} />
@@ -1944,9 +2085,9 @@ function Details({ state, setState, onNext, onBack }: { state: BookingState; set
               </p>
             </div>
             <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <InputField label="Họ và tên đại diện *" value={contact.name} onChange={v => setContact(c => ({ ...c, name: v }))} placeholder="NGUYỄN VĂN NAM" required />
-              <InputField label="Số điện thoại di động *" value={contact.phone} onChange={v => setContact(c => ({ ...c, phone: v }))} placeholder="+84 xxx xxx xxx" type="tel" required />
-              <InputField label="Địa chỉ Email *" value={contact.email} onChange={v => setContact(c => ({ ...c, email: v }))} placeholder="email@example.com" type="email" required />
+              <InputField label="Họ và tên đại diện" value={contact.name} onChange={v => setContact(c => ({ ...c, name: v }))} placeholder="NGUYỄN VĂN NAM" required />
+              <InputField label="Số điện thoại di động" value={contact.phone} onChange={v => setContact(c => ({ ...c, phone: v }))} placeholder="+84 xxx xxx xxx" type="tel" required />
+              <InputField label="Địa chỉ Email" value={contact.email} onChange={v => setContact(c => ({ ...c, email: v }))} placeholder="email@example.com" type="email" required />
             </div>
           </GlassCard>
 
@@ -2031,8 +2172,8 @@ function Details({ state, setState, onNext, onBack }: { state: BookingState; set
                             <p className="text-slate-400 text-xs font-semibold mb-3">Vui lòng điền không dấu. Tránh viết ký tự đặc biệt.</p>
                             <div className="grid grid-cols-3 gap-3">
                               <SelectField label="Danh xưng" value={d.salutation} onChange={v => update(i, "salutation", v)} options={["Mr", "Mrs", "Ms", "Mstr", "Miss"]} required />
-                              <InputField label="Họ (không dấu) *" value={d.lastName} onChange={v => update(i, "lastName", v.toUpperCase())} placeholder="NGUYEN" required mono />
-                              <InputField label="Tên đệm & Tên *" value={d.firstName} onChange={v => update(i, "firstName", v.toUpperCase())} placeholder="VAN NAM" required mono />
+                              <InputField label="Họ (không dấu)" value={d.lastName} onChange={v => update(i, "lastName", v.toUpperCase())} placeholder="NGUYEN" required mono />
+                              <InputField label="Tên đệm & Tên" value={d.firstName} onChange={v => update(i, "firstName", v.toUpperCase())} placeholder="VAN NAM" required mono />
                             </div>
                           </div>
 
@@ -2072,7 +2213,7 @@ function Details({ state, setState, onNext, onBack }: { state: BookingState; set
                                 ))}
                               </div>
                             </div>
-                            <SelectField label="Quốc tịch *" value={d.nationality} onChange={v => update(i, "nationality", v)} options={NATIONALITIES} placeholder="Chọn quốc tịch" required />
+                            <SelectField label="Quốc tịch" value={d.nationality} onChange={v => update(i, "nationality", v)} options={NATIONALITIES} placeholder="Chọn quốc tịch" required />
                           </div>
 
                           {/* Passport / CCCD details */}
@@ -2080,8 +2221,8 @@ function Details({ state, setState, onNext, onBack }: { state: BookingState; set
                             <SectionTitle>Giấy tờ thông hành</SectionTitle>
                             <div className="grid grid-cols-3 gap-3 mb-3.5">
                               <SelectField label="Loại giấy tờ" value={d.docType} onChange={v => update(i, "docType", v)} options={["CCCD", "Hộ chiếu"]} required />
-                              <InputField label="Số hiệu giấy tờ *" value={d.docNumber} onChange={v => update(i, "docNumber", v.toUpperCase())} placeholder="Số hiệu..." required mono />
-                              <SelectField label="Quốc gia phát hành *" value={d.docCountry} onChange={v => update(i, "docCountry", v)} options={COUNTRIES} placeholder="Quốc gia" required />
+                              <InputField label="Số hiệu giấy tờ" value={d.docNumber} onChange={v => update(i, "docNumber", v.toUpperCase())} placeholder="Số hiệu..." required mono />
+                              <SelectField label="Quốc gia phát hành" value={d.docCountry} onChange={v => update(i, "docCountry", v)} options={COUNTRIES} placeholder="Quốc gia" required />
                             </div>
                             <FlexDatePicker
                               label="Ngày hết hạn giấy tờ"
@@ -2458,7 +2599,7 @@ function Payment({ state, onBack }: { state: BookingState; onBack: () => void })
   if (paid) return <ETicket state={state} />;
   
   return (
-    <div className="min-h-screen bg-slate-50 pb-16" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 dark:bg-background pb-16 text-slate-800 dark:text-slate-100" style={{ fontFamily: "'Inter', sans-serif" }}>
       <TopBar step={3} onBack={onBack} />
       
       <div className="max-w-6xl mx-auto px-6 py-7 grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -2617,10 +2758,10 @@ function ETicket({ state }: { state: BookingState }) {
       <motion.div initial={{ opacity: 0, scale: 0.88, y: 18 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: "spring", stiffness: 165, damping: 20 }} className="w-full max-w-lg">
         <div className="text-center mb-8">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: "spring", stiffness: 255 }} className="w-20 h-20 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><Check size={34} /></motion.div>
-          <h1 className="text-slate-800 text-3xl font-black mb-2">Đặt vé thành công!</h1>
-          <p className="text-slate-500 text-sm font-semibold">Vé điện tử đã gửi đến <span className="text-primary font-bold">{state.contact?.email || pax?.email || "email của bạn"}</span></p>
+          <h1 className="text-slate-800 dark:text-slate-100 text-3xl font-black mb-2">Đặt vé thành công!</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Vé điện tử đã gửi đến <span className="text-primary dark:text-accent font-bold">{state.contact?.email || pax?.email || "email của bạn"}</span></p>
         </div>
-        <div className="bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-100">
+        <div className="bg-white dark:bg-card rounded-3xl overflow-hidden shadow-xl border border-slate-100 dark:border-slate-800">
           <div className="bg-gradient-to-br from-primary to-[#004b87] px-7 pt-6 pb-10 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 75% 25%, white 0%, transparent 55%)" }} />
             <div className="relative z-10">
@@ -2699,19 +2840,285 @@ function ETicket({ state }: { state: BookingState }) {
   );
 }
 
+function DarkModeToggle() {
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
+  
+  const toggle = () => {
+    const isDark = document.documentElement.classList.toggle("dark");
+    setDark(isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  };
+
+  return (
+    <button 
+      onClick={toggle} 
+      className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-50 hover:bg-slate-100 dark:bg-[#00223f] dark:hover:bg-slate-800 text-slate-500 dark:text-amber-400 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shadow-sm hover:scale-105 shrink-0"
+      title={dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+    >
+      {dark ? <Sun size={15} /> : <Moon size={15} />}
+    </button>
+  );
+}
+
+function AuthModal({ open, mode, onClose, onSwitch }: { open: boolean; mode: "signin" | "signup" | null; onClose: () => void; onSwitch: (m: "signin" | "signup") => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setEmail(""); setPassword(""); setName(""); setPhone(""); setSuccess(false);
+    }
+  }, [open, mode]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setSuccess(true);
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    }, 1200);
+  };
+
+  if (!open || !mode) return null;
+
+  return (
+    <Modal open={open} onClose={onClose} title={mode === "signin" ? "Đăng nhập tài khoản" : "Đăng ký tài khoản"}>
+      {success ? (
+        <div className="p-8 text-center space-y-3">
+          <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <Check size={32} />
+          </div>
+          <h3 className="text-slate-800 dark:text-slate-100 font-extrabold text-lg">
+            {mode === "signin" ? "Đăng nhập thành công!" : "Đăng ký thành công!"}
+          </h3>
+          <p className="text-slate-400 text-xs font-semibold">Chào mừng bạn đến với Vietravel Airlines</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-slate-800 dark:text-slate-100">
+          {mode === "signup" && (
+            <>
+              <InputField label="Họ và tên" value={name} onChange={setName} placeholder="NGUYEN VAN A" required />
+              <InputField label="Số điện thoại" value={phone} onChange={setPhone} placeholder="09xxxxxxxx" type="tel" required />
+            </>
+          )}
+          <InputField label="Địa chỉ Email" value={email} onChange={setEmail} placeholder="yourname@domain.com" type="email" required />
+          <InputField label="Mật khẩu" value={password} onChange={setPassword} placeholder="••••••••" type="password" required />
+          
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-primary dark:bg-accent text-white dark:text-primary py-3 rounded-xl text-sm font-bold shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer mt-6"
+          >
+            {loading ? (
+              <motion.div animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="w-4 h-4 border-2 border-white dark:border-primary border-t-transparent rounded-full" />
+            ) : mode === "signin" ? "Đăng nhập" : "Đăng ký"}
+          </button>
+          
+          <div className="text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
+            {mode === "signin" ? (
+              <>
+                Chưa có tài khoản?{" "}
+                <button type="button" onClick={() => onSwitch("signup")} className="text-primary dark:text-accent font-bold hover:underline">Đăng ký ngay</button>
+              </>
+            ) : (
+              <>
+                Đã có tài khoản?{" "}
+                <button type="button" onClick={() => onSwitch("signin")} className="text-primary dark:text-accent font-bold hover:underline">Đăng nhập ngay</button>
+              </>
+            )}
+          </div>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [bookingRef, setBookingRef] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [step, setStep] = useState<"search" | "details" | "refundForm" | "rescheduleForm" | "success">("search");
+  const [submitting, setSubmitting] = useState(false);
+  const [actionType, setActionType] = useState<"refund" | "reschedule" | null>(null);
+  const [newDate, setNewDate] = useState("");
+  const [refundReason, setRefundReason] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setTimeout(() => {
+      setSubmitting(false);
+      setStep("details");
+    }, 1000);
+  };
+
+  const handleRefundSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setTimeout(() => {
+      setSubmitting(false);
+      setActionType("refund");
+      setStep("success");
+    }, 1200);
+  };
+
+  const handleRescheduleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setTimeout(() => {
+      setSubmitting(false);
+      setActionType("reschedule");
+      setStep("success");
+    }, 1200);
+  };
+
+  if (!open) return null;
+
+  return (
+    <Modal open={open} onClose={onClose} title="Đổi lịch & Hoàn vé">
+      <div className="p-5 text-slate-800 dark:text-slate-100 max-h-[85vh] overflow-y-auto">
+        {step === "search" && (
+          <form onSubmit={handleSearch} className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Nhập mã đặt chỗ và họ khách hàng để tìm kiếm thông tin đơn hàng.</p>
+            <InputField label="Mã đặt chỗ (e.g. VTA8X1)" value={bookingRef} onChange={setBookingRef} placeholder="VTAxxx" required />
+            <InputField label="Họ hành khách (Không dấu)" value={lastName} onChange={setLastName} placeholder="NGUYEN" required />
+            <button 
+              type="submit" 
+              disabled={submitting}
+              className="w-full bg-primary dark:bg-accent text-white dark:text-primary py-3 rounded-xl text-sm font-bold shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer mt-6"
+            >
+              {submitting ? (
+                <motion.div animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="w-4 h-4 border-2 border-white dark:border-primary border-t-transparent rounded-full" />
+              ) : "Tìm kiếm đơn đặt chỗ"}
+            </button>
+          </form>
+        )}
+
+        {step === "details" && (
+          <div className="space-y-4">
+            {/* Ticket Info */}
+            <div className="bg-slate-50 dark:bg-[#00223f] border border-slate-150 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-800 pb-2">
+                <span className="text-[10px] text-slate-400 font-extrabold uppercase">Mã đặt chỗ: {bookingRef.toUpperCase() || "VTAD3F"}</span>
+                <span className="bg-primary/10 dark:bg-accent/10 text-primary dark:text-accent rounded-full px-3 py-0.5 text-[10px] font-bold">Vé đã xác nhận</span>
+              </div>
+              <div className="text-xs font-bold space-y-1">
+                <div>Chặng bay: <span className="text-[#004b87] dark:text-accent">TP. Hồ Chí Minh (SGN) → Phú Quốc (PQC)</span></div>
+                <div>Hành khách: <span className="uppercase">{lastName ? `${lastName} NGUYEN` : "NGUYỄN VĂN MINH"}</span></div>
+                <div>Ngày bay xuất phát: <span className="text-slate-655 dark:text-slate-300">14 tháng 7, 2026 (08:35)</span></div>
+                <div>Hãng vận chuyển: <span className="text-slate-655 dark:text-slate-300">Vietravel Airlines (VU751)</span></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <button 
+                type="button"
+                onClick={() => setStep("refundForm")}
+                className="bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-655 border border-red-200 dark:border-red-500/25 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Yêu cầu hoàn vé
+              </button>
+              <button 
+                type="button"
+                onClick={() => setStep("rescheduleForm")}
+                className="bg-blue-50 hover:bg-blue-100 dark:bg-[#00223f] dark:hover:bg-slate-800 text-[#004b87] dark:text-accent border border-blue-200 dark:border-[#EAA135]/30 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Yêu cầu đổi lịch bay
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "refundForm" && (
+          <form onSubmit={handleRefundSubmit} className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Vui lòng chọn lý do và điền thông tin tài khoản ngân hàng để nhận tiền hoàn.</p>
+            <SelectField label="Lý do yêu cầu hoàn vé" value={refundReason} onChange={setRefundReason} options={["Thay đổi lịch trình cá nhân", "Lý do sức khỏe", "Hãng thay đổi lịch bay > 4 tiếng", "Lý do bất khả kháng khác"]} placeholder="Chọn lý do..." required />
+            <InputField label="Tên chủ tài khoản nhận hoàn tiền" placeholder="NGUYEN VAN MINH" required />
+            <InputField label="Số tài khoản ngân hàng" placeholder="123456xxx" required />
+            <InputField label="Tên ngân hàng (e.g. SHB, VCB)" placeholder="SHB" required />
+            
+            <div className="flex gap-3 pt-4">
+              <button type="button" onClick={() => setStep("details")} className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer">Quay lại</button>
+              <button type="submit" disabled={submitting} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                {submitting ? <motion.div animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="w-4 h-4 border-2 border-white border-t-transparent rounded-full" /> : "Gửi yêu cầu hoàn vé"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === "rescheduleForm" && (
+          <form onSubmit={handleRescheduleSubmit} className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Chọn ngày khởi hành mới mong muốn đổi lịch.</p>
+            <CalPicker label="Chọn ngày bay mới" value={newDate} onChange={setNewDate} />
+            <div className="flex gap-3 pt-4">
+              <button type="button" onClick={() => setStep("details")} className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer">Quay lại</button>
+              <button type="submit" disabled={submitting || !newDate} className="flex-1 bg-primary dark:bg-accent text-white dark:text-primary py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                {submitting ? <motion.div animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="w-4 h-4 border-2 border-white dark:border-primary border-t-transparent rounded-full" /> : "Xác nhận đổi lịch bay"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === "success" && (
+          <div className="text-center space-y-3 py-6">
+            <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <Check size={32} />
+            </div>
+            <h3 className="text-slate-800 dark:text-slate-100 font-extrabold text-lg">
+              {actionType === "refund" ? "Gửi yêu cầu hoàn vé thành công!" : "Đổi lịch bay thành công!"}
+            </h3>
+            <p className="text-slate-555 dark:text-slate-400 text-xs font-semibold px-4">
+              {actionType === "refund" 
+                ? "Yêu cầu đã được tiếp nhận. Tiền hoàn sẽ được xử lý vào tài khoản của quý khách trong vòng 3-5 ngày làm việc."
+                : `Lịch bay mới đã được xác nhận sang ngày ${newDate}. Vé điện tử mới đã được gửi tới email của bạn.`}
+            </p>
+            <button 
+              type="button"
+              onClick={onClose}
+              className="mt-6 bg-primary dark:bg-accent text-white dark:text-primary px-6 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              Đóng cửa sổ
+            </button>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 export default function App() {
   const [step,setStep]=useState(0);
   const [state,setRaw]=useState<BookingState>(INIT);
   function setState(p:Partial<BookingState>){ setRaw(prev=>{ const n={...prev,...p}; n.totalPrice=n.baseFare+n.taxFee+n.ancillaryFee; return n; }); }
+  const [authModal, setAuthModal] = useState<"signin" | "signup" | null>(null);
+  const [refundOpen, setRefundOpen] = useState(false);
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (saved === "dark" || (!saved && prefersDark)) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
   return (
-    <div className="w-full min-h-screen bg-background" style={{fontFamily:"'Inter', sans-serif",scrollbarWidth:"none"}}>
+    <div className="w-full min-h-screen bg-background text-foreground" style={{fontFamily:"'Inter', sans-serif",scrollbarWidth:"none"}}>
       <style>{`::-webkit-scrollbar{display:none}*{scrollbar-width:none}`}</style>
       <AnimatePresence mode="wait">
-        {step===0&&<motion.div key="s0" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0,x:-16}} transition={{duration:0.22}}><Homepage state={state} setState={setState} onSearch={()=>setStep(1)}/></motion.div>}
+        {step===0&&<motion.div key="s0" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0,x:-16}} transition={{duration:0.22}}><Homepage state={state} setState={setState} onSearch={()=>setStep(1)} onAuth={(m) => setAuthModal(m)} onRefund={() => setRefundOpen(true)}/></motion.div>}
         {step===1&&<motion.div key="s1" initial={{opacity:0,x:16}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-16}} transition={{duration:0.22}}><SelectFlight state={state} setState={setState} onNext={()=>setStep(2)} onBack={()=>setStep(0)}/></motion.div>}
         {step===2&&<motion.div key="s2" initial={{opacity:0,x:16}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-16}} transition={{duration:0.22}}><Details state={state} setState={setState} onNext={()=>setStep(3)} onBack={()=>setStep(1)}/></motion.div>}
         {step===3&&<motion.div key="s3" initial={{opacity:0,x:16}} animate={{opacity:1,x:0}} exit={{opacity:0}} transition={{duration:0.22}}><Payment state={state} onBack={()=>setStep(2)}/></motion.div>}
       </AnimatePresence>
+      <AuthModal open={authModal !== null} mode={authModal} onClose={() => setAuthModal(null)} onSwitch={(m) => setAuthModal(m)} />
+      <RefundRescheduleModal open={refundOpen} onClose={() => setRefundOpen(false)} />
     </div>
   );
 }
