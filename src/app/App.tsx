@@ -1580,10 +1580,19 @@ function parseCCCD(raw: string): CCCDData | null {
   if (parts.length < 5) return null;
 
   // Format: [ID]|[Old ID or empty]|[Full name]|[DOB ddmmyyyy]|[Gender]|[Nationality]|[Country]|[Address]|[Expiry ddmmyyyy]
-  // Or shorter: [ID]|[Name]|[DOB]|[Gender]|[Address]
+  // Or standard 7-field format: [ID]|[Old ID or empty]|[Full name]|[DOB ddmmyyyy]|[Gender]|[Address]|[Issue date]
   let id = "", name = "", dobRaw = "", genderRaw = "", nat = "Việt Nam", expRaw = "";
 
-  if (parts.length >= 9) {
+  if (parts.length >= 7 && /^\d{12}$/.test(parts[0]) && (/^\d{9}$/.test(parts[1]) || parts[1] === "")) {
+    // Standard 7-field chip CCCD format
+    id = parts[0];
+    name = parts[2];
+    dobRaw = parts[3];
+    genderRaw = parts[4];
+    if (parts.length >= 9) {
+      expRaw = parts[8];
+    }
+  } else if (parts.length >= 9) {
     // New chip CCCD format
     id = parts[0];
     name = parts[2];
@@ -1592,11 +1601,20 @@ function parseCCCD(raw: string): CCCDData | null {
     nat = parts[5] || "Việt Nam";
     expRaw = parts[8];
   } else if (parts.length >= 6) {
-    id = parts[0];
-    name = parts[1] || parts[2];
-    dobRaw = parts[2] || parts[3];
-    genderRaw = parts[3] || parts[4];
-    expRaw = parts[parts.length - 1];
+    // If parts[1] is a number (old ID), then name is parts[2]
+    if (/^\d+$/.test(parts[1])) {
+      id = parts[0];
+      name = parts[2];
+      dobRaw = parts[3];
+      genderRaw = parts[4];
+      expRaw = parts[parts.length - 1];
+    } else {
+      id = parts[0];
+      name = parts[1];
+      dobRaw = parts[2];
+      genderRaw = parts[3];
+      expRaw = parts[parts.length - 1];
+    }
   } else {
     id = parts[0];
     name = parts[1];
@@ -1604,26 +1622,37 @@ function parseCCCD(raw: string): CCCDData | null {
     genderRaw = parts[3];
   }
 
-  // Parse date ddmmyyyy or dd/mm/yyyy
+  // Parse date ddmmyyyy or dd/mm/yyyy or yyyy-mm-dd
   function parseDate(s: string) {
+    if (!s) return { day: "", month: "", year: "" };
+    // Check if it matches YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+      const dateParts = s.split("-");
+      const yr = dateParts[0], mon = dateParts[1], day = dateParts[2];
+      return { day, month: MONTHS_LABEL[parseInt(mon, 10)-1] || "", year: yr };
+    }
+    // Check if it matches DD/MM/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+      const dateParts = s.split("/");
+      const day = dateParts[0], mon = dateParts[1], yr = dateParts[2];
+      return { day, month: MONTHS_LABEL[parseInt(mon, 10)-1] || "", year: yr };
+    }
     const clean = s.replace(/\D/g, "");
     if (clean.length === 8) {
       const day = clean.slice(0,2), mon = clean.slice(2,4), yr = clean.slice(4);
-      return { day, month: MONTHS_LABEL[parseInt(mon)-1] || "", year: yr };
+      return { day, month: MONTHS_LABEL[parseInt(mon, 10)-1] || "", year: yr };
     }
     return { day: "", month: "", year: "" };
   }
 
   // Parse name: Vietnamese CCCD stores as "NGUYEN VAN A" — last word = first name, rest = last name
-  // Actually Vietnamese convention: full name in order Họ Tên, so last part is given name
   const nameParts = name.trim().split(/\s+/);
   const firstName = nameParts.slice(1).join(" "); // tên (everything after first word)
   const lastName  = nameParts[0] || "";            // họ (first word)
 
-  const gender = genderRaw.toLowerCase().includes("n") && !genderRaw.toLowerCase().includes("nu") ? "Nam"
-    : genderRaw.toLowerCase().includes("nu") || genderRaw.toLowerCase().includes("nữ") ? "Nữ"
-    : genderRaw === "Male" || genderRaw === "M" ? "Nam"
-    : genderRaw === "Female" || genderRaw === "F" ? "Nữ"
+  const cleanGender = genderRaw.trim().toLowerCase();
+  const gender = (cleanGender === "nam" || cleanGender === "male" || cleanGender === "m") ? "Nam"
+    : (cleanGender === "nữ" || cleanGender === "nu" || cleanGender === "female" || cleanGender === "f") ? "Nữ"
     : genderRaw;
 
   return {
