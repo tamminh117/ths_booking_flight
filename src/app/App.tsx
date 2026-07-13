@@ -1766,6 +1766,47 @@ function handleDownloadPDF(paxName: string, flight: string, seat: string, pnr: s
               <td style="color: #10b981;">ĐÃ XÁC NHẬN (CONFIRMED)</td>
             </tr>
           </table>
+          
+          <!-- Barcode Generation -->
+          <div style="text-align: center; margin-top: 25px; border-top: 1px dashed #cbd5e1; padding-top: 25px;">
+            <svg style="width: 320px; height: 60px; margin: 0 auto;" viewBox="0 0 100 20" preserveAspectRatio="none">
+              <rect x="0" y="0" width="1.5" height="20" fill="black" />
+              <rect x="3" y="0" width="0.5" height="20" fill="black" />
+              <rect x="5" y="0" width="2" height="20" fill="black" />
+              <rect x="9" y="0" width="1" height="20" fill="black" />
+              <rect x="11" y="0" width="0.5" height="20" fill="black" />
+              <rect x="13" y="0" width="3" height="20" fill="black" />
+              <rect x="18" y="0" width="1.5" height="20" fill="black" />
+              <rect x="21" y="0" width="0.5" height="20" fill="black" />
+              <rect x="23" y="0" width="2" height="20" fill="black" />
+              <rect x="27" y="0" width="1.5" height="20" fill="black" />
+              <rect x="30" y="0" width="0.5" height="20" fill="black" />
+              <rect x="32" y="0" width="3" height="20" fill="black" />
+              <rect x="37" y="0" width="1" height="20" fill="black" />
+              <rect x="39" y="0" width="0.5" height="20" fill="black" />
+              <rect x="41" y="0" width="2" height="20" fill="black" />
+              <rect x="45" y="0" width="1.5" height="20" fill="black" />
+              <rect x="48" y="0" width="0.5" height="20" fill="black" />
+              <rect x="50" y="0" width="3" height="20" fill="black" />
+              <rect x="55" y="0" width="1.5" height="20" fill="black" />
+              <rect x="58" y="0" width="0.5" height="20" fill="black" />
+              <rect x="60" y="0" width="2" height="20" fill="black" />
+              <rect x="64" y="0" width="1" height="20" fill="black" />
+              <rect x="66" y="0" width="0.5" height="20" fill="black" />
+              <rect x="68" y="0" width="3" height="20" fill="black" />
+              <rect x="73" y="0" width="1.5" height="20" fill="black" />
+              <rect x="76" y="0" width="0.5" height="20" fill="black" />
+              <rect x="78" y="0" width="2" height="20" fill="black" />
+              <rect x="82" y="0" width="1" height="20" fill="black" />
+              <rect x="84" y="0" width="0.5" height="20" fill="black" />
+              <rect x="86" y="0" width="3" height="20" fill="black" />
+              <rect x="91" y="0" width="1.5" height="20" fill="black" />
+              <rect x="94" y="0" width="0.5" height="20" fill="black" />
+              <rect x="96" y="0" width="4" height="20" fill="black" />
+            </svg>
+            <div style="font-family: monospace; font-size: 11px; color: #64748b; letter-spacing: 4px; margin-top: 5px; font-weight: bold;">*${pnr}*</div>
+          </div>
+
           <div class="footer">
             <p>Cảm ơn quý khách đã tin tưởng lựa chọn Vietravel Airlines!</p>
             <p>Vui lòng xuất trình vé điện tử này cùng giấy tờ tùy thân hợp lệ khi làm thủ tục tại sân bay.</p>
@@ -3018,11 +3059,32 @@ function AuthModal({ open, mode, onClose, onSwitch }: { open: boolean; mode: "si
 function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [bookingRef, setBookingRef] = useState("");
   const [lastName, setLastName] = useState("");
-  const [step, setStep] = useState<"search" | "details" | "refundForm" | "rescheduleForm" | "success">("search");
+  const [step, setStep] = useState<"search" | "details" | "refundForm" | "rescheduleForm" | "rescheduleFlight" | "rescheduleSeat" | "reschedulePayment" | "success">("search");
   const [submitting, setSubmitting] = useState(false);
   const [actionType, setActionType] = useState<"refund" | "reschedule" | null>(null);
   const [newDate, setNewDate] = useState("");
   const [refundReason, setRefundReason] = useState("");
+
+  // Reschedule specifics
+  const [selectedNewFlight, setSelectedNewFlight] = useState<any>(null);
+  const [selectedNewSeat, setSelectedNewSeat] = useState<string>("");
+  const [reschedulePaymentMethod, setReschedulePaymentMethod] = useState<string>("qr");
+
+  const SIMULATED_FLIGHTS = [
+    { code: "VU751", time: "08:35 - 09:40", diff: 0, desc: "Chuyến bay sáng sớm - Phù hợp công tác" },
+    { code: "VU753", time: "14:15 - 15:20", diff: 10, desc: "Giờ cất cánh đẹp - Khung giờ chiều" },
+    { code: "VU755", time: "19:40 - 20:45", diff: 20, desc: "Chuyến tối muộn - Giá tiết kiệm" }
+  ];
+
+  const MINI_ROWS = [4, 5, 6, 7, 8];
+  const MINI_COLS = ["A", "B", "C", "D", "E", "F"];
+  const MINI_OCCUPIED = new Set(["4B", "5C", "6E", "7D", "8B", "8E"]);
+
+  // Calculate fees at the top level of the component to avoid inline IIFE syntax issues in JSX
+  const fareDiff = selectedNewFlight?.diff || 0;
+  const seatFee = selectedNewSeat.endsWith("A") || selectedNewSeat.endsWith("F") ? 5 : 0;
+  const changeFee = 15;
+  const totalExtra = changeFee + fareDiff + seatFee;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -3050,7 +3112,7 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
       setSubmitting(false);
       setActionType("reschedule");
       setStep("success");
-    }, 1200);
+    }, 1250);
   };
 
   if (!open) return null;
@@ -3112,7 +3174,7 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
 
         {step === "refundForm" && (
           <form onSubmit={handleRefundSubmit} className="space-y-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Vui lòng chọn lý do và điền thông tin tài khoản ngân hàng để nhận tiền hoàn.</p>
+            <p className="text-xs text-slate-555 dark:text-slate-400 font-semibold mb-2">Vui lòng chọn lý do và điền thông tin tài khoản ngân hàng để nhận tiền hoàn.</p>
             <SelectField label="Lý do yêu cầu hoàn vé" value={refundReason} onChange={setRefundReason} options={["Thay đổi lịch trình cá nhân", "Lý do sức khỏe", "Hãng thay đổi lịch bay > 4 tiếng", "Lý do bất khả kháng khác"]} placeholder="Chọn lý do..." required />
             <InputField label="Tên chủ tài khoản nhận hoàn tiền" placeholder="NGUYEN VAN MINH" required />
             <InputField label="Số tài khoản ngân hàng" placeholder="123456xxx" required />
@@ -3128,16 +3190,174 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
         )}
 
         {step === "rescheduleForm" && (
-          <form onSubmit={handleRescheduleSubmit} className="space-y-4">
+          <div className="space-y-4">
             <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Chọn ngày khởi hành mới mong muốn đổi lịch.</p>
             <CalPicker label="Chọn ngày bay mới" value={newDate} onChange={setNewDate} />
             <div className="flex gap-3 pt-4">
               <button type="button" onClick={() => setStep("details")} className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer">Quay lại</button>
-              <button type="submit" disabled={submitting || !newDate} className="flex-1 bg-primary dark:bg-accent text-white dark:text-primary py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
-                {submitting ? <motion.div animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="w-4 h-4 border-2 border-white dark:border-primary border-t-transparent rounded-full" /> : "Xác nhận đổi lịch bay"}
+              <button 
+                type="button" 
+                disabled={!newDate} 
+                onClick={() => setStep("rescheduleFlight")}
+                className="flex-1 bg-primary dark:bg-accent text-white dark:text-primary py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Tiếp tục chọn chuyến
               </button>
             </div>
-          </form>
+          </div>
+        )}
+
+        {step === "rescheduleFlight" && (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Chọn chuyến bay mới vào ngày {newDate}:</p>
+            <div className="space-y-3">
+              {SIMULATED_FLIGHTS.map(fl => (
+                <button
+                  key={fl.code}
+                  type="button"
+                  onClick={() => setSelectedNewFlight(fl)}
+                  className={cn(
+                    "w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 cursor-pointer",
+                    selectedNewFlight?.code === fl.code 
+                      ? "border-primary bg-blue-50/50 dark:border-accent dark:bg-[#00223f] shadow-md"
+                      : "border-slate-200 dark:border-slate-800 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-slate-800"
+                  )}
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm text-[#004b87] dark:text-accent">{fl.code}</span>
+                      <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded font-bold">{fl.time}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-semibold">{fl.desc}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-black text-slate-800 dark:text-slate-200">
+                      {fl.diff === 0 ? "Không đổi" : `+$${fl.diff}`}
+                    </div>
+                    <div className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Chênh lệch</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-4">
+              <button type="button" onClick={() => setStep("rescheduleForm")} className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer">Quay lại</button>
+              <button 
+                type="button" 
+                disabled={!selectedNewFlight}
+                onClick={() => setStep("rescheduleSeat")}
+                className="flex-1 bg-primary dark:bg-accent text-white dark:text-primary py-3 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Tiếp tục chọn ghế
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "rescheduleSeat" && (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Chọn ghế ngồi mới của bạn:</p>
+            <div className="flex justify-center mb-4">
+              <div className="grid grid-cols-6 gap-2 bg-slate-50 dark:bg-[#00223f] border border-slate-100 dark:border-slate-800 rounded-2xl p-4">
+                {MINI_ROWS.flatMap(r => 
+                  MINI_COLS.map(c => {
+                    const seat = `${r}${c}`;
+                    const occupied = MINI_OCCUPIED.has(seat);
+                    const selected = selectedNewSeat === seat;
+                    return (
+                      <button
+                        key={seat}
+                        type="button"
+                        disabled={occupied}
+                        onClick={() => setSelectedNewSeat(seat)}
+                        className={cn(
+                          "w-8 h-8 rounded-lg border text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center",
+                          occupied 
+                            ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-900 text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                            : selected
+                              ? "bg-primary border-primary text-white shadow-md"
+                              : "bg-white dark:bg-card border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        )}
+                      >
+                        {seat}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+            <div className="text-[10px] text-slate-400 text-center font-semibold mb-4">Lưu ý: Ghế cửa sổ (A, F) tính thêm phí dịch vụ +$5.</div>
+            <div className="flex gap-3 pt-4">
+              <button type="button" onClick={() => setStep("rescheduleFlight")} className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer">Quay lại</button>
+              <button 
+                type="button" 
+                disabled={!selectedNewSeat}
+                onClick={() => setStep("reschedulePayment")}
+                className="flex-1 bg-primary dark:bg-accent text-white dark:text-primary py-3 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Tiếp tục thanh toán
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "reschedulePayment" && (
+          <div className="space-y-4">
+            <div className="bg-slate-50 dark:bg-[#00223f] border border-slate-150 dark:border-slate-800 rounded-2xl p-4 space-y-2">
+              <h4 className="text-xs font-bold border-b border-slate-200/50 dark:border-slate-800 pb-2">Chi tiết chi phí chênh lệch:</h4>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Phí đổi ngày bay cố định:</span>
+                <span className="font-bold font-mono">$15</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Chênh lệch giá vé chuyến {selectedNewFlight?.code}:</span>
+                <span className="font-bold font-mono">${fareDiff}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-500">Phí dịch vụ chọn ghế {selectedNewSeat}:</span>
+                <span className="font-bold font-mono">${seatFee}</span>
+              </div>
+              <div className="flex justify-between text-sm font-extrabold border-t border-slate-200/50 dark:border-slate-800 pt-2 text-[#f26722]">
+                <span>Tổng chi phí thanh toán thêm:</span>
+                <span className="font-mono">${totalExtra}</span>
+              </div>
+            </div>
+
+            {/* Payment method selector */}
+            <div className="space-y-2">
+              <label className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block">Chọn phương thức thanh toán</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "qr", name: "Quét mã VNPAY" },
+                  { id: "card", name: "Thẻ Quốc tế" }
+                ].map(pm => (
+                  <button
+                    key={pm.id}
+                    type="button"
+                    onClick={() => setReschedulePaymentMethod(pm.id)}
+                    className={cn(
+                      "p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+                      reschedulePaymentMethod === pm.id
+                        ? "bg-[#004b87] text-white border-[#004b87] dark:bg-accent dark:text-primary dark:border-accent"
+                        : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-900 text-slate-655 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    )}
+                  >
+                    {pm.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button type="button" onClick={() => setStep("rescheduleSeat")} className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer">Quay lại</button>
+              <button 
+                type="button" 
+                onClick={handleRescheduleSubmit}
+                className="flex-1 bg-primary dark:bg-accent text-white dark:text-primary py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {submitting ? <motion.div animate={{rotate:360}} transition={{duration:1,repeat:Infinity,ease:"linear"}} className="w-4 h-4 border-2 border-white dark:border-primary border-t-transparent rounded-full" /> : `Thanh toán $${totalExtra}`}
+              </button>
+            </div>
+          </div>
         )}
 
         {step === "success" && (
@@ -3148,10 +3368,10 @@ function RefundRescheduleModal({ open, onClose }: { open: boolean; onClose: () =
             <h3 className="text-slate-800 dark:text-slate-100 font-extrabold text-lg">
               {actionType === "refund" ? "Gửi yêu cầu hoàn vé thành công!" : "Đổi lịch bay thành công!"}
             </h3>
-            <p className="text-slate-555 dark:text-slate-400 text-xs font-semibold px-4">
+            <p className="text-slate-555 dark:text-slate-450 text-xs font-semibold px-4 leading-relaxed">
               {actionType === "refund" 
                 ? "Yêu cầu đã được tiếp nhận. Tiền hoàn sẽ được xử lý vào tài khoản của quý khách trong vòng 3-5 ngày làm việc."
-                : `Lịch bay mới đã được xác nhận sang ngày ${newDate}. Vé điện tử mới đã được gửi tới email của bạn.`}
+                : `Lịch bay mới đã được xác nhận sang ngày ${newDate} trên chuyến bay ${selectedNewFlight?.code} (Giờ bay: ${selectedNewFlight?.time}). Ghế ngồi mới của quý khách là ${selectedNewSeat}. Vé điện tử mới đã được gửi tới email.`}
             </p>
             <button 
               type="button"
